@@ -3,24 +3,32 @@ descarga_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::tagList(
     shiny::h4("Descargar datos"),
-    shiny::dateRangeInput(ns("fechas"), "Rango fechas (max 365 dias)", start = Sys.Date() - 365, end = Sys.Date(), max = Sys.Date(), language = "es", separator = " a "),
+    shiny::p(shiny::tags$small("Ajusta el rango en la serie temporal para habilitar la descarga."), class = "text-muted"),
     shiny::textInput(ns("email"), "Email", placeholder = "correo@ejemplo.com"),
+    shiny::uiOutput(ns("rango_info")),
     shiny::actionButton(ns("solicitar"), "Solicitar descarga"),
     shiny::uiOutput(ns("estado"))
   )
 }
 
 #' @export
-descarga_server <- function(id, variable_id, estacion_id) {
+descarga_server <- function(id, variable_id, estacion_id, periodo_seleccionado) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
     vid <- shiny::reactive({ v <- variable_id(); if (is.null(v)) integer(0) else c(v) })
     eid <- shiny::reactive({ e <- estacion_id(); if (is.null(e)) integer(0) else c(e) })
 
+    # Boton habilitado solo cuando hay rango (shiny 4.2 no soporta disabled en updateActionButton)
+    output$rango_info <- shiny::renderUI({
+      per <- periodo_seleccionado()
+      if (is.null(per)) return(shiny::p(shiny::tags$span("Sin rango seleccionado.", class = "text-muted")))
+      shiny::p(shiny::tags$span(paste("Rango:", format(per[1], "%Y-%m-%d"), "a", format(per[2], "%Y-%m-%d")), class = "text-info"))
+    })
+
     shiny::observeEvent(input$solicitar, {
-      v <- vid(); e <- eid(); f <- input$fechas
+      v <- vid(); e <- eid(); f <- periodo_seleccionado()
       if (length(v) == 0 || length(e) == 0 || is.null(f)) {
-        output$estado <- shiny::renderUI(shiny::p(shiny::tags$span("Selecciona estacion y variable.", class = "text-warning")))
+        output$estado <- shiny::renderUI(shiny::p(shiny::tags$span("Selecciona estacion, variable y rango en el grafico.", class = "text-warning")))
         return()
       }
       body <- list(estacion_ids = as.list(e), variable_ids = as.list(v), fecha_inicio = format(f[1], "%Y-%m-%d"), fecha_fin = format(f[2], "%Y-%m-%d"), email = input$email %||% "", formato = "csv")

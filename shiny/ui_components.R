@@ -16,9 +16,7 @@ ec_sidebar_filters <- function() {
     ec_filter_block("estacion", "Estacion", c("Selecciona estacion" = ""), "aplicar_estacion", selected = ""),
     div(class = "ec-filter-block",
       shiny::actionButton("ver_datos", "Ver datos", icon = shiny::icon("play"), class = "btn-primary ec-btn-ver-datos")
-    ),
-    hr(class = "ec-separator"),
-    descarga_ui("descarga")
+    )
   )
 }
 
@@ -58,7 +56,9 @@ ec_dashboard_layout <- function(title = APP_TITLE) {
           grafico_ui("grafico"),
           shiny::tags$hr(style = "border-color:#e0e0e0;margin:12px 0;"),
           shiny::h5("Datos", style = "font-weight:600;color:#394553;"),
-          tabla_ui("tabla")
+          tabla_ui("tabla"),
+          shiny::tags$hr(style = "border-color:#e0e0e0;margin:12px 0;"),
+          descarga_ui("descarga")
         ),
 
         shiny::tags$div(id = "cite",

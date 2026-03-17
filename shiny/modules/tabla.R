@@ -5,9 +5,12 @@ tabla_ui <- function(id) {
 }
 
 #' @export
-tabla_server <- function(id, datos) {
+tabla_server <- function(id, datos, ver_datos_click = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
     output$tabla <- DT::renderDataTable({
+      if (!is.null(ver_datos_click) && ver_datos_click() < 1L) {
+        return(DT::datatable(data.frame(msg = "Selecciona estacion y variable, luego clic en Ver datos."), options = list(dom = "t"), rownames = FALSE))
+      }
       res <- datos()
       if (!is.null(res$error)) {
         return(DT::datatable(data.frame(msg = res$error), options = list(dom = "t"), rownames = FALSE))

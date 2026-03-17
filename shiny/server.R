@@ -3,6 +3,7 @@ server <- function(input, output, session) {
   variable_aplicada <- shiny::reactiveVal("")
   estacion_id <- shiny::reactiveVal(NULL)
   ver_datos_click <- shiny::reactiveVal(0)
+  periodo_seleccionado <- shiny::reactiveVal(NULL)
 
   variable_id <- shiny::reactive({
     v <- input$variable
@@ -63,8 +64,10 @@ server <- function(input, output, session) {
   datos <- shiny::eventReactive(ver_datos_click(), {
     eid <- estacion_id_ver()
     vid <- variable_id()
-    if (is.null(eid) || is.null(vid)) return(list(df = data.frame(), error = NULL))
-    dat <- api_get("/datos", list(estacion_id = eid, variable_id = vid), timeout = 30)
+    if (is.null(eid) || is.null(vid)) return(list(df = data.frame(), error = "Selecciona estacion y variable primero."))
+    dat <- shiny::withProgress(message = "Cargando serie temporal...", value = 0.3, {
+      api_get("/datos", list(estacion_id = eid, variable_id = vid), timeout = 60)
+    })
     if (is.null(dat)) return(list(df = data.frame(), error = "Error de conexion"))
     if (is.list(dat) && !is.null(dat$error)) return(list(df = data.frame(), error = paste(dat$error, collapse = " ")))
     if (length(dat) == 0) return(list(df = data.frame(), error = NULL))
@@ -86,7 +89,9 @@ server <- function(input, output, session) {
     v <- variables()
     if (nrow(v) > 0) {
       ch <- c("Todas" = "", setNames(as.character(v$id), v$nombre))
-      shiny::updateSelectInput(session, "variable", choices = ch, selected = "")
+      curr <- input$variable
+      sel <- if (!is.null(curr) && curr != "" && curr %in% as.character(v$id)) curr else ""
+      shiny::updateSelectInput(session, "variable", choices = ch, selected = sel)
     }
   })
 
@@ -102,8 +107,10 @@ server <- function(input, output, session) {
     e <- estaciones()
     ch <- c("Selecciona estacion" = "")
     if (nrow(e) > 0) ch <- c(ch, setNames(as.character(e$id), e$nombre))
+    curr <- input$estacion
     eid <- estacion_id()
-    sel <- if (!is.null(eid) && eid %in% e$id) as.character(eid) else ""
+    sel <- if (!is.null(curr) && curr != "" && curr %in% as.character(e$id)) curr
+           else if (!is.null(eid) && eid %in% e$id) as.character(eid) else ""
     shiny::updateSelectInput(session, "estacion", choices = ch, selected = sel)
   })
 
@@ -113,9 +120,9 @@ server <- function(input, output, session) {
   shiny::outputOptions(output, "datos_listos", suspendWhenHidden = FALSE)
 
   mapa_server("mapa", estaciones, estacion_id)
-  grafico_server("grafico", estacion_id_ver, variable_id, ver_datos_click, datos)
-  tabla_server("tabla", datos)
-  descarga_server("descarga", variable_id, estacion_id_ver)
+  grafico_server("grafico", estacion_id_ver, variable_id, ver_datos_click, datos, periodo_seleccionado)
+  tabla_server("tabla", datos, ver_datos_click)
+  descarga_server("descarga", variable_id, estacion_id_ver, periodo_seleccionado)
 }
 
 

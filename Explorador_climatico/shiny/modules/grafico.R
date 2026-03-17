@@ -1,97 +1,74 @@
-#' @title Módulo del gráfico de serie temporal
-#' GET datos cuando estacion_id + variable_id + fechas, plot_ly, botones rango, stats
+#' @export
 grafico_ui <- function(id) {
   ns <- shiny::NS(id)
-  shiny::tagList(
-    shiny::div(
-      class = "btn-group btn-group-sm mb-2",
-      shiny::actionButton(ns("btn_1m"), "1M"),
-      shiny::actionButton(ns("btn_6m"), "6M"),
-      shiny::actionButton(ns("btn_1y"), "1Y"),
-      shiny::actionButton(ns("btn_5y"), "5Y"),
-      shiny::actionButton(ns("btn_all"), "Todo")
-    ),
-    shinycssloaders::withSpinner(plotly::plotlyOutput(ns("grafico"), height = "280px")),
-    shiny::uiOutput(ns("stats_panel"))
-  )
+  shinycssloaders::withSpinner(plotly::plotlyOutput(ns("grafico"), height = 350))
 }
 
-grafico_server <- function(id, api_url, estacion_id, variable_id, fechas, ver_datos) {
+#' @export
+grafico_server <- function(id, estacion_id, variable_id, ver_datos_click, datos, periodo_seleccionado = NULL, ...) {
+  if (is.null(periodo_seleccionado)) periodo_seleccionado <- shiny::reactiveVal(NULL)
   shiny::moduleServer(id, function(input, output, session) {
-    rango_activo <- shiny::reactiveVal(NULL)
-
-    shiny::observeEvent(input$btn_1m, { rango_activo(30) })
-    shiny::observeEvent(input$btn_6m, { rango_activo(180) })
-    shiny::observeEvent(input$btn_1y, { rango_activo(365) })
-    shiny::observeEvent(input$btn_5y, { rango_activo(365 * 5) })
-    shiny::observeEvent(input$btn_all, { rango_activo(0) })
-
-    datos <- shiny::reactive({
-      ver_datos()
-      eid <- estacion_id()
-      vid <- variable_id()
-      fch <- fechas()
-      if (is.null(eid) || is.null(vid) || is.null(fch)) return(NULL)
-      base <- sub("/$", "", api_url())
-      url <- paste0(base, "/datos?estacion_id=", eid, "&variable_id=", vid,
-        "&fecha_inicio=", format(fch[1], "%Y-%m-%d"),
-        "&fecha_fin=", format(fch[2], "%Y-%m-%d"))
-      resp <- tryCatch({
-        httr::GET(url, httr::timeout(15))
-      }, error = function(e) NULL)
-      if (is.null(resp) || httr::status_code(resp) != 200) return(NULL)
-      dat <- httr::content(resp, as = "parsed", type = "application/json")
-      if (is.null(dat) || "error" %in% names(dat)) return(NULL)
-      if (is.data.frame(dat)) return(dat)
-      df <- as.data.frame(do.call(rbind, dat), stringsAsFactors = FALSE)
-      if (nrow(df) == 0) return(df)
-      df$fecha <- as.Date(df$fecha)
-      df$valor <- as.numeric(df$valor)
-      df
-    })
-
-    datos_plot <- shiny::reactive({
-      d <- datos()
-      if (is.null(d) || nrow(d) == 0) return(NULL)
-      r <- rango_activo()
-      if (!is.null(r) && r > 0) {
-        fmax <- max(d$fecha, na.rm = TRUE)
-        d <- d[d$fecha >= fmax - r, ]
+    ns <- session$ns
+    to_date <- function(x) {
+      if (is.null(x)) return(NULL)
+      n <- suppressWarnings(as.numeric(x))
+      if (is.na(n)) return(tryCatch(as.Date(x), error = function(e) NULL))
+      if (n > 1e10) n <- n / 86400000
+      tryCatch(as.Date(n, origin = "1970-01-01"), error = function(e) NULL)
+    }
+    shiny::observe({
+      ed <- plotly::event_data("plotly_relayout", source = ns("grafico"))
+      if (is.null(ed)) return()
+      rng <- ed[["xaxis.range"]]
+      if (is.null(rng)) rng <- c(ed[["xaxis.range[0]"]], ed[["xaxis.range[1]"]])
+      if (!is.null(rng) && length(rng) >= 2) {
+        d1 <- to_date(rng[1]); d2 <- to_date(rng[2])
+        if (!is.null(d1) && !is.null(d2) && d1 <= d2) periodo_seleccionado(c(d1, d2))
       }
-      d
     })
 
     output$grafico <- plotly::renderPlotly({
-      d <- datos_plot()
-      if (is.null(d) || nrow(d) == 0) {
-        return(plotly::plot_ly() %>% plotly::config(displayModeBar = FALSE) %>%
-          plotly::layout(title = "Selecciona estación y pulsa Ver datos"))
+      if (ver_datos_click() < 1L) {
+        return(plotly::plot_ly() |>
+          plotly::add_annotations(text = "Selecciona estacion y variable, luego clic en Ver datos", x = 0.5, y = 0.5, xref = "paper", yref = "paper", showarrow = FALSE) |>
+          plotly::layout(xaxis = list(visible = FALSE), yaxis = list(visible = FALSE)))
       }
-      tit <- paste(unique(d$estacion_nombre)[1], "-", unique(d$variable_nombre)[1])
-      n <- nrow(d)
-      p <- plotly::plot_ly(d, x = ~fecha, y = ~valor, type = "scatter", mode = if (n < 100) "lines+markers" else "lines",
-        line = list(color = "#1D9E75"), marker = list(size = 6))
-      p %>% plotly::layout(
-        title = tit,
-        xaxis = list(title = ""),
-        yaxis = list(title = unique(d$unidad)[1] %||% "Valor"),
-        margin = list(t = 50),
-        showlegend = FALSE
-      ) %>% plotly::config(displayModeBar = TRUE)
-    })
-
-    output$stats_panel <- shiny::renderUI({
-      d <- datos_plot()
-      if (is.null(d) || nrow(d) == 0) return(NULL)
-      v <- d$valor
-      v <- v[!is.na(v)]
-      if (length(v) == 0) return(NULL)
-      shiny::tags$div(
-        class = "d-flex gap-3 small text-muted mt-1",
-        shiny::tags$span(glue::glue("Mín: {round(min(v), 2)}")),
-        shiny::tags$span(glue::glue("Máx: {round(max(v), 2)}")),
-        shiny::tags$span(glue::glue("Promedio: {round(mean(v), 2)}"))
-      )
+      if (is.null(estacion_id()) || is.null(variable_id())) {
+        return(plotly::plot_ly() |>
+          plotly::add_annotations(text = "Selecciona estacion y variable, luego clic en Ver datos", x = 0.5, y = 0.5, xref = "paper", yref = "paper", showarrow = FALSE) |>
+          plotly::layout(xaxis = list(visible = FALSE), yaxis = list(visible = FALSE)))
+      }
+      res <- datos()
+      if (!is.null(res$error)) {
+        return(plotly::plot_ly() |>
+          plotly::add_annotations(text = res$error, x = 0.5, y = 0.5, xref = "paper", yref = "paper", showarrow = FALSE) |>
+          plotly::layout(xaxis = list(visible = FALSE), yaxis = list(visible = FALSE)))
+      }
+      df <- res$df
+      if (is.null(df) || nrow(df) == 0) {
+        return(plotly::plot_ly() |>
+          plotly::add_annotations(text = "No hay datos para esta estacion/variable", x = 0.5, y = 0.5, xref = "paper", yref = "paper", showarrow = FALSE) |>
+          plotly::layout(xaxis = list(visible = FALSE), yaxis = list(visible = FALSE)))
+      }
+      periodo_seleccionado(NULL)
+      df_plot <- df[!is.na(df$valor), ]
+      if (nrow(df_plot) == 0) {
+        return(plotly::plot_ly() |>
+          plotly::add_annotations(text = "No hay datos validos", x = 0.5, y = 0.5, xref = "paper", yref = "paper", showarrow = FALSE) |>
+          plotly::layout(xaxis = list(visible = FALSE), yaxis = list(visible = FALSE)))
+      }
+      n_valid <- sum(!is.na(df$valor))
+      dias <- as.numeric(difftime(max(df$fecha), min(df$fecha), units = "days")) + 1
+      cobertura <- round(100 * n_valid / max(dias, 1), 1)
+      p <- plotly::plot_ly(df_plot, x = ~fecha, y = ~valor, type = "scatter", mode = "lines+markers",
+        line = list(color = "#1f77b4"), marker = list(size = 6), source = ns("grafico")) |>
+        plotly::layout(
+          title = paste0("Completitud: ", cobertura, "% - Ajusta el rango para habilitar descarga"),
+          xaxis = list(title = "Fecha", rangeslider = list(visible = TRUE)),
+          yaxis = list(title = df$unidad[1] %||% "Valor")
+        )
+      plotly::event_register(p, "plotly_relayout")
+      p
     })
   })
 }
