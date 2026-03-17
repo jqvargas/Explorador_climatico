@@ -44,14 +44,14 @@ function(macrozona = "", region = "", chile_only = "1", minimal = "", con_datos 
     q <- paste0(q, " AND e.cod_reg = $", length(params)+1)
     params <- c(params, as.integer(region))
   }
-  if (!is.null(id_fuente) && id_fuente != "") {
+  if (!is.null(id_fuente) && id_fuente != "" && id_fuente != "0") {
     fid <- as.integer(id_fuente)
-    if (!is.na(fid)) {
+    if (!is.na(fid) && fid > 0) {
       q <- paste0(q, " AND e.id_fuente = $", length(params)+1)
       params <- c(params, fid)
     }
   }
-  if (sel_minimal) q <- paste0(q, " ORDER BY e.id LIMIT 5000")
+  q <- paste0(q, if (sel_minimal) " ORDER BY e.id LIMIT 5000" else "")
   df <- if (length(params) > 0) {
     DBI::dbGetQuery(conn, q, params = params)
   } else {
@@ -89,6 +89,8 @@ function(id) {
   ", params = list(as.integer(id)))
   df
 }
+
+
 
 
 

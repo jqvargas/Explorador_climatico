@@ -1,0 +1,21 @@
+﻿# Bases de datos y datos locales
+pgdata/
+*.db
+*.sqlite
+*.sqlite3
+
+# Variables de entorno (pueden contener secretos)
+.env
+.env.local
+.env.*.local
+
+# Logs y archivos temporales
+*.log
+*.tmp
+*.temp
+desktop.ini
+
+# R
+.Rhistory
+.RData
+.Rproj.user

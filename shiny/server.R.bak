@@ -1,6 +1,5 @@
 server <- function(input, output, session) {
-  operador_aplicado <- shiny::reactiveVal("0")
-  variable_aplicada <- shiny::reactiveVal("")
+  # Simplified: single source of truth for filters
   estacion_id <- shiny::reactiveVal(NULL)
   ver_datos_click <- shiny::reactiveVal(0)
 
@@ -10,12 +9,13 @@ server <- function(input, output, session) {
     as.integer(v)
   })
 
-  estacion_id_ver <- shiny::reactive({
-    e <- input$estacion
-    if (is.null(e) || e == "") return(NULL)
-    as.integer(e)
+  operador_id <- shiny::reactive({
+    o <- input$operador
+    if (is.null(o) || o == "" || o == "0") return(NULL)
+    as.integer(o)
   })
 
+  # Simple fetchers using api_get
   variables <- shiny::reactive({
     dat <- api_get("/variables")
     if (is.null(dat)) return(data.frame(id = integer(), nombre = character()))
@@ -38,10 +38,8 @@ server <- function(input, output, session) {
 
   estaciones <- shiny::reactive({
     params <- list(chile_only = "1", minimal = "1")
-    op <- operador_aplicado()
-    if (!is.null(op) && op != "" && op != "0") params$id_fuente <- as.integer(op)
-    var <- variable_aplicada()
-    if (!is.null(var) && var != "") params$id_variable <- as.integer(var)
+    if (!is.null(operador_id())) params$id_fuente <- operador_id()
+    if (!is.null(variable_id())) params$id_variable <- variable_id()
     dat <- api_get("/estaciones", params, timeout = 30)
     if (is.null(dat)) return(data.frame(id = integer(), nombre = character(), lat = numeric(), lon = numeric(), macrozona = character()))
     if (is.data.frame(dat)) {
@@ -57,33 +55,24 @@ server <- function(input, output, session) {
     df
   })
 
-  datos <- shiny::eventReactive(ver_datos_click(), {
-    eid <- estacion_id_ver()
-    vid <- variable_id()
-    if (is.null(eid) || is.null(vid)) return(list(df = data.frame(), error = NULL))
-    dat <- api_get("/datos", list(estacion_id = eid, variable_id = vid), timeout = 30)
+  # Single datos reactive - shared by grafico and tabla (one API call)
+  datos <- shiny::reactive({
+    shiny::req(estacion_id(), variable_id(), ver_datos_click() > 0)
+    dat <- api_get(paste0("/datos?estacion_id=", estacion_id(), "&variable_id=", variable_id()), timeout = 30)
     if (is.null(dat)) return(list(df = data.frame(), error = "Error de conexion"))
     if (is.list(dat) && !is.null(dat$error)) return(list(df = data.frame(), error = paste(dat$error, collapse = " ")))
     if (length(dat) == 0) return(list(df = data.frame(), error = NULL))
     if (is.data.frame(dat)) return(list(df = dat, error = NULL))
     df <- do.call(rbind, lapply(dat, function(x) data.frame(fecha = as.Date(x$fecha), valor = as.numeric(x$valor %||% NA), estacion_nombre = as.character(x$estacion_nombre %||% ""), variable_nombre = as.character(x$variable_nombre %||% ""), unidad = as.character(x$unidad %||% ""), stringsAsFactors = FALSE)))
     list(df = df, error = NULL)
-  }, ignoreNULL = FALSE)
-
-  shiny::observeEvent(input$aplicar_operador, { operador_aplicado(input$operador %||% "0") })
-  shiny::observeEvent(input$aplicar_variable, { variable_aplicada(input$variable %||% "") })
-  shiny::observeEvent(input$aplicar_estacion, {
-    e <- input$estacion
-    estacion_id(if (nzchar(e)) as.integer(e) else NULL)
   })
 
-  shiny::observeEvent(input$ver_datos, { ver_datos_click(ver_datos_click() + 1) })
-
+  # Dropdown sync
   shiny::observe({
     v <- variables()
     if (nrow(v) > 0) {
-      ch <- c("Todas" = "", setNames(as.character(v$id), v$nombre))
-      shiny::updateSelectInput(session, "variable", choices = ch, selected = "")
+      ch <- setNames(as.character(v$id), v$nombre)
+      shiny::updateSelectInput(session, "variable", choices = ch, selected = ch[1])
     }
   })
 
@@ -104,8 +93,15 @@ server <- function(input, output, session) {
     shiny::updateSelectInput(session, "estacion", choices = ch, selected = sel)
   })
 
+  shiny::observeEvent(input$estacion, {
+    estacion_id(if (nzchar(input$estacion)) as.integer(input$estacion) else NULL)
+  })
+
+  shiny::observeEvent(input$ver_datos, { ver_datos_click(ver_datos_click() + 1) })
+
+  # Modules
   mapa_server("mapa", estaciones, estacion_id)
-  grafico_server("grafico", estacion_id_ver, variable_id, ver_datos_click, datos)
+  grafico_server("grafico", estacion_id, variable_id, ver_datos_click, datos)
   tabla_server("tabla", datos)
-  descarga_server("descarga", variable_id, estacion_id_ver)
+  descarga_server("descarga", variable_id, estacion_id)
 }

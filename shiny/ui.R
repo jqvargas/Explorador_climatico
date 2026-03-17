@@ -15,9 +15,12 @@ dashboardPage(
     div(
       class = "sidebar-menu-content",
       shiny::selectInput("operador", "Operador / Fuente", choices = NULL),
+      shiny::actionButton("aplicar_operador", "Aplicar", width = "100%"),
       shiny::selectInput("variable", "Variable climatica", choices = NULL),
-      shiny::selectInput("estacion", "Estacion", choices = c("Selecciona una estacion..." = ""), selected = ""),
-      shiny::actionButton("ver_datos", "Ver datos", icon = icon("play"), class = "btn-primary"),
+      shiny::actionButton("aplicar_variable", "Aplicar", width = "100%"),
+      shiny::selectInput("estacion", "Estacion", choices = c("Selecciona estacion" = ""), selected = ""),
+      shiny::actionButton("aplicar_estacion", "Aplicar", width = "100%"),
+      shiny::actionButton("ver_datos", "Ver datos", icon = icon("play"), class = "btn-primary", width = "100%"),
       hr(),
       descarga_ui("descarga")
     )
@@ -31,14 +34,12 @@ dashboardPage(
       tabItem("filtros", fluidRow(
         box(width = 12, status = "info",
           h4("Instrucciones"),
-          p("1. Selecciona operador (DGA, DMC, etc.), variable y estacion."),
-          p("2. Haz clic en Ver datos."),
-          p("3. Navega a Grafico o Tabla para ver los resultados."),
-          p("Al seleccionar estacion se muestra toda la serie. Usa la barra del grafico para filtrar. La descarga tiene limites.")
+          p("1. Cada filtro (Operador, Variable, Estacion) tiene su boton Aplicar: el mapa solo se actualiza al hacer clic."),
+          p("2. Por defecto todos estan en Todas. Cambia un filtro y haz clic en Aplicar para actualizar el mapa."),
+          p("3. Ver datos usa las selecciones actuales (sin necesidad de Aplicar) para mostrar grafico y tabla."),
+          p("4. La descarga respeta los limites configurados.")
         )
       ))
     )
   )
 )
-
-

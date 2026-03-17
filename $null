@@ -1,0 +1,3 @@
+Error response from daemon: conflict: unable to delete explorador_climatico-shiny:latest (must be forced) - container ab4e72bb122e is using its referenced image b81ffb792587
+Error response from daemon: invalid reference format
+Error response from daemon: invalid reference format

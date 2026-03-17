@@ -1,13 +1,9 @@
-`%||%` <- function(x, y) if (is.null(x)) y else x
-
 #' @export
 descarga_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::tagList(
     shiny::h4("Descargar datos"),
-    shiny::dateRangeInput(ns("fechas"), "Rango fechas (max 365 dias)",
-      start = Sys.Date() - 365, end = Sys.Date(),
-      max = Sys.Date(), language = "es", separator = " a "),
+    shiny::dateRangeInput(ns("fechas"), "Rango fechas (max 365 dias)", start = Sys.Date() - 365, end = Sys.Date(), max = Sys.Date(), language = "es", separator = " a "),
     shiny::textInput(ns("email"), "Email", placeholder = "correo@ejemplo.com"),
     shiny::actionButton(ns("solicitar"), "Solicitar descarga"),
     shiny::uiOutput(ns("estado"))
@@ -15,137 +11,58 @@ descarga_ui <- function(id) {
 }
 
 #' @export
-descarga_server <- function(id, api_url, variable_ids, estacion_ids) {
+descarga_server <- function(id, variable_id, estacion_id) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    vid <- shiny::reactive({ v <- variable_id(); if (is.null(v)) integer(0) else c(v) })
+    eid <- shiny::reactive({ e <- estacion_id(); if (is.null(e)) integer(0) else c(e) })
 
     shiny::observeEvent(input$solicitar, {
-      vid <- variable_ids()
-      eid <- estacion_ids()
-      f <- if (!is.null(input$fechas)) c(input$fechas[1], input$fechas[2]) else NULL
-      if (length(vid) == 0 || length(eid) == 0 || is.null(f)) {
-        output$estado <- shiny::renderUI({
-          shiny::p(shiny::tags$span("Selecciona una estacion en el mapa y una variable.", class = "text-warning"))
-        })
+      v <- vid(); e <- eid(); f <- input$fechas
+      if (length(v) == 0 || length(e) == 0 || is.null(f)) {
+        output$estado <- shiny::renderUI(shiny::p(shiny::tags$span("Selecciona estacion y variable.", class = "text-warning")))
         return()
       }
-
-      body <- list(
-        estacion_ids = as.list(eid),
-        variable_ids = as.list(vid),
-        fecha_inicio = format(f[1], "%Y-%m-%d"),
-        fecha_fin = format(f[2], "%Y-%m-%d"),
-        email = input$email %||% "",
-        formato = "csv"
-      )
-
-      base <- api_url()
-      url <- paste0(base, "/solicitar-descarga")
-      resp <- tryCatch(
-        httr::POST(url, body = body, encode = "json", httr::content_type_json(), httr::timeout(10)),
-        error = function(e) NULL
-      )
-
+      body <- list(estacion_ids = as.list(e), variable_ids = as.list(v), fecha_inicio = format(f[1], "%Y-%m-%d"), fecha_fin = format(f[2], "%Y-%m-%d"), email = input$email %||% "", formato = "csv")
+      url <- paste0(api_url(), "/solicitar-descarga")
+      resp <- tryCatch(httr::POST(url, body = body, encode = "json", httr::content_type_json(), httr::timeout(10)), error = function(e) NULL)
       if (is.null(resp) || httr::status_code(resp) != 200) {
         msg <- "Error al solicitar descarga."
-        if (!is.null(resp)) {
-          cnt <- httr::content(resp, as = "parsed")
-          if (is.list(cnt) && !is.null(cnt$error)) msg <- cnt$error
-        }
-        output$estado <- shiny::renderUI({
-          shiny::p(shiny::tags$span(msg, class = "text-danger"))
-        })
+        if (!is.null(resp)) { cnt <- httr::content(resp, as = "parsed"); if (is.list(cnt) && !is.null(cnt$error)) msg <- cnt$error }
+        output$estado <- shiny::renderUI(shiny::p(shiny::tags$span(msg, class = "text-danger")))
         return()
       }
-
       dat <- httr::content(resp, as = "parsed")
-      job_id <- dat$job_id
-      estado_url <- dat$estado_url %||% paste0(base, "/descarga/estado/", job_id)
-
-      if (!grepl("^https?://", estado_url)) {
-        estado_url <- paste0(base, estado_url)
-      }
-
-      poll_estado(job_id, estado_url, base, session, ns, output)
+      estado_url <- dat$estado_url %||% paste0(api_url(), "/descarga/estado/", dat$job_id)
+      if (!grepl("^https?://", estado_url)) estado_url <- paste0(api_url(), estado_url)
+      poll_estado(estado_url, output, session)
     })
 
-    poll_estado <- function(job_id, estado_url, base, session, ns, output) {
+    poll_estado <- function(estado_url, output, session) {
+      show <- function(html) output$estado <- shiny::renderUI(html)
       check <- function() {
-        resp <- tryCatch(httr::GET(estado_url, httr::timeout(5)), error = function(e) NULL)
-        if (is.null(resp) || httr::status_code(resp) != 200) return(list(estado = "error"))
-        httr::content(resp, as = "parsed")
+        r <- tryCatch(httr::content(httr::GET(estado_url, httr::timeout(5)), as = "parsed"), error = function(e) NULL)
+        if (is.null(r)) list(estado = "error") else r
       }
-
-      resultado <- check()
-      estado <- resultado$estado %||% "desconocido"
-
-      if (estado == "listo") {
-        link <- resultado$link_descarga %||% ""
-        if (!grepl("^https?://", link) && nzchar(link)) {
-          link <- paste0(base, link)
-        }
-        output$estado <- shiny::renderUI({
-          if (nzchar(link)) {
-            shiny::p(
-              shiny::tags$span("Listo. ", class = "text-success"),
-              shiny::tags$a("Descargar archivo", href = link, target = "_blank")
-            )
-          } else {
-            shiny::p(shiny::tags$span("Listo. Revisa tu email.", class = "text-success"))
-          }
-        })
-        return()
-      }
-
-      if (estado %in% c("error", "fallido")) {
-        output$estado <- shiny::renderUI({
-          shiny::p(shiny::tags$span("La descarga fallÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³.", class = "text-danger"))
-        })
-        return()
-      }
-
-      output$estado <- shiny::renderUI({
-        shiny::p(shiny::tags$span(paste("Procesando...", estado), class = "text-info"))
-      })
-
       done <- shiny::reactiveVal(FALSE)
       shiny::observe({
         if (shiny::isolate(done())) return()
-        resultado <- check()
-        estado <- resultado$estado %||% "desconocido"
-
+        r <- check()
+        estado <- r$estado %||% "desconocido"
         if (estado == "listo") {
-          link <- resultado$link_descarga %||% ""
-          if (!grepl("^https?://", link) && nzchar(link)) {
-            link <- paste0(base, link)
-          }
-          output$estado <- shiny::renderUI({
-            if (nzchar(link)) {
-              shiny::p(
-                shiny::tags$span("Listo. ", class = "text-success"),
-                shiny::tags$a("Descargar archivo", href = link, target = "_blank")
-              )
-            } else {
-              shiny::p(shiny::tags$span("Listo. Revisa tu email.", class = "text-success"))
-            }
-          })
+          link <- r$link_descarga %||% ""
+          if (nzchar(link) && !grepl("^https?://", link)) link <- paste0(api_url(), link)
+          show(if (nzchar(link)) shiny::p(shiny::tags$span("Listo. ", class = "text-success"), shiny::tags$a("Descargar", href = link, target = "_blank")) else shiny::p(shiny::tags$span("Listo. Revisa email.", class = "text-success")))
           done(TRUE)
-          return()
-        }
-
-        if (estado %in% c("error", "fallido")) {
-          output$estado <- shiny::renderUI({
-            shiny::p(shiny::tags$span("La descarga fallÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³.", class = "text-danger"))
-          })
+        } else if (estado %in% c("error", "fallido")) {
+          show(shiny::p(shiny::tags$span("La descarga fallo.", class = "text-danger")))
           done(TRUE)
-          return()
+        } else {
+          show(shiny::p(shiny::tags$span(paste("Procesando...", estado), class = "text-info")))
+          shiny::invalidateLater(3000, session)
         }
-
-        output$estado <- shiny::renderUI({
-          shiny::p(shiny::tags$span(paste("Procesando...", estado), class = "text-info"))
-        })
-        shiny::invalidateLater(3000, session)
       })
     }
   })
 }
+
