@@ -42,7 +42,10 @@ server <- function(input, output, session) {
     if (!is.null(op) && op != "" && op != "0") params$id_fuente <- as.integer(op)
     var <- variable_aplicada()
     if (!is.null(var) && var != "") params$id_variable <- as.integer(var)
-    dat <- api_get("/estaciones", params, timeout = 30)
+    dat <- shiny::withProgress(message = "Cargando estaciones...", value = 0, {
+      shiny::setProgress(value = 0.3, message = "Consultando API...")
+      api_get("/estaciones", params, timeout = 30)
+    })
     if (is.null(dat)) return(data.frame(id = integer(), nombre = character(), lat = numeric(), lon = numeric(), macrozona = character()))
     if (is.data.frame(dat)) {
       for (c in c("id", "nombre", "lat", "lon", "macrozona")) if (!c %in% names(dat)) dat[[c]] <- NA
@@ -114,4 +117,6 @@ server <- function(input, output, session) {
   tabla_server("tabla", datos)
   descarga_server("descarga", variable_id, estacion_id_ver)
 }
+
+
 

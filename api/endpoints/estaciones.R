@@ -15,15 +15,22 @@ function(macrozona = "", region = "", chile_only = "1", minimal = "", con_datos 
   filtro_con_datos <- tolower(con_datos) %in% c("1", "true", "yes", "si")
   if (sel_minimal) {
     q <- "SELECT e.id, e.nombre, e.lat, e.lon, e.macrozona FROM estacion e"
-    if (filtro_con_datos || (nzchar(id_variable) && !is.na(as.integer(id_variable)))) {
-      subq <- "SELECT DISTINCT id_estacion FROM observacion_final"
-      if (nzchar(id_variable)) {
-        vid <- as.integer(id_variable)
-        if (!is.na(vid)) subq <- paste0(subq, " WHERE id_variable = ", vid)
+    has_var_filter <- nzchar(id_variable) && !is.na(as.integer(id_variable))
+    fid_present <- nzchar(id_fuente) && id_fuente != "" && id_fuente != "0" && !is.na(as.integer(id_fuente))
+    if (filtro_con_datos || has_var_filter) {
+      vid <- if (has_var_filter) as.integer(id_variable) else NA_integer_
+      if (fid_present && has_var_filter && !is.na(vid)) {
+        q <- paste0(q, " WHERE 1=1")
+        q <- paste0(q, " AND EXISTS (SELECT 1 FROM observacion_final o WHERE o.id_estacion = e.id AND o.id_variable = ", vid, ")")
+      } else {
+        subq <- "SELECT DISTINCT id_estacion FROM observacion_final"
+        if (has_var_filter && !is.na(vid)) subq <- paste0(subq, " WHERE id_variable = ", vid)
+        q <- paste0(q, " JOIN (", subq, ") o ON e.id = o.id_estacion")
+        q <- paste0(q, " WHERE 1=1")
       }
-      q <- paste0(q, " JOIN (", subq, ") o ON e.id = o.id_estacion")
+    } else {
+      q <- paste0(q, " WHERE 1=1")
     }
-    q <- paste0(q, " WHERE 1=1")
   } else {
     q <- "SELECT e.id, e.nombre, e.lat, e.lon, e.tipo, e.macrozona, e.nom_reg, e.nom_com, e.id_fuente,
       e.fecha_ini,
