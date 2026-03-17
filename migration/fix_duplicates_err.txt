@@ -1,0 +1,26 @@
+[2026-03-16 11:31:22] ===  observacion_preliminar  ===
+[2026-03-16 11:31:23] Rows before:  21,489,712
+[2026-03-16 11:31:23] Creating temp table of duplicate ids (may take a few min)...
+[2026-03-16 11:41:21] Duplicate ids:  271,792
+[2026-03-16 12:16:45]   Batch  10 / 55  - deleted  494026  so far
+[2026-03-16 12:46:17]   Batch  20 / 55  - deleted  988023  so far
+[2026-03-16 13:15:30]   Batch  30 / 55  - deleted  1481872  so far
+[2026-03-16 13:43:36]   Batch  40 / 55  - deleted  1975739  so far
+[2026-03-16 14:11:54]   Batch  50 / 55  - deleted  2469652  so far
+[2026-03-16 14:25:44]   Batch  55 / 55  - deleted  2684962  so far
+[2026-03-16 14:25:48] Rows after:  18,804,750
+[2026-03-16 14:25:48] ===  observacion_modelo  ===
+[2026-03-16 14:30:45] Rows before:  346,800,000
+[2026-03-16 14:30:45] Creating temp table of duplicate ids (may take a few min)...
+[2026-03-16 14:52:11] === observacion_modelo: DROP and prepare for re-migration ===
+[2026-03-16 14:57:17] Rows before:  346,800,000
+[2026-03-16 15:31:12] === observacion_modelo: DROP ===
+[2026-03-16 15:31:16] Dropped
+[2026-03-16 15:31:16] Checkpoint cleared. Run migration.R to re-migrate.
+[2026-03-16 15:31:16] Done.
+[2026-03-16 15:38:17] Dropping  observacion_preliminar
+[2026-03-16 15:38:20] Dropped  observacion_preliminar
+[2026-03-16 15:38:20] Dropping  observacion_modelo
+[2026-03-16 15:38:20] Dropped  observacion_modelo
+[2026-03-16 15:38:20] Checkpoint cleared for preliminar and modelo. Run migration.R
+[2026-03-16 15:38:20] Done.

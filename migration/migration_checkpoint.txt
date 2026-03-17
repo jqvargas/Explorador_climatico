@@ -1,0 +1,9 @@
+estacion:-1
+estacion_atributos_extra:-1
+fuente:-1
+modelo:-1
+variable:-1
+observacion:66
+observacion_final:83
+observacion_preliminar:38
+observacion_modelo:762

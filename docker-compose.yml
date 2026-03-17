@@ -1,0 +1,107 @@
+﻿services:
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    container_name: clima_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: clima1234
+      POSTGRES_DB: clima
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    networks:
+      - clima-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d clima"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:alpine
+    networks:
+      - clima-network
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    environment:
+      - DB_HOST=timescaledb
+      - DB_PORT=5432
+      - DB_NAME=clima
+      - DB_USER=postgres
+      - DB_PASS=clima1234
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    env_file:
+      - .env
+    volumes:
+      - ./api:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - timescaledb
+    networks:
+      - clima-network
+    restart: unless-stopped
+
+  shiny:
+    build:
+      context: ./shiny
+      dockerfile: Dockerfile
+    environment:
+      - API_URL=http://api:8000
+    env_file:
+      - .env
+    volumes:
+      - ./shiny:/srv/shiny-server
+    ports:
+      - "3838:3838"
+    depends_on:
+      - api
+    networks:
+      - clima-network
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=timescaledb
+      - DB_PORT=5432
+      - DB_NAME=clima
+      - DB_USER=postgres
+      - DB_PASS=clima1234
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./worker:/app
+    depends_on:
+      - redis
+      - timescaledb
+    networks:
+      - clima-network
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    volumes:
+      - ./nginx/html:/usr/share/nginx/html
+    ports:
+      - "3000:80"
+    networks:
+      - clima-network
+    restart: unless-stopped
+
+networks:
+  clima-network:
+    driver: bridge

@@ -1,0 +1,75 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>rodaja.cl - Explorador Climático</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #333; }
+    .header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; border-bottom: 1px solid #e0e0e0; }
+    .logo { font-weight: 700; font-size: 1.5rem; color: #1D9E75; text-decoration: none; }
+    nav a { margin-left: 1.5rem; color: #555; text-decoration: none; }
+    nav a:hover { color: #1D9E75; }
+    .hero { text-align: center; padding: 4rem 2rem; background: linear-gradient(180deg, #f0f9f5 0%, #fff 100%); }
+    .hero h1 { font-size: 2.5rem; margin-bottom: 1rem; color: #1a1a1a; }
+    .hero p { font-size: 1.2rem; color: #555; max-width: 600px; margin: 0 auto 2rem; }
+    .btn { display: inline-block; padding: 0.75rem 1.5rem; background: #1D9E75; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
+    .btn:hover { background: #178b65; }
+    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; padding: 4rem 2rem; max-width: 1000px; margin: 0 auto; }
+    .feature-card { padding: 1.5rem; border: 1px solid #e0e0e0; border-radius: 8px; }
+    .feature-card h3 { color: #1D9E75; margin-bottom: 0.5rem; }
+    .plans { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; padding: 2rem; max-width: 700px; margin: 0 auto; }
+    .plan-card { padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; text-align: center; }
+    .plan-card.featured { border-color: #1D9E75; background: #f0f9f5; }
+    .plan-card h3 { color: #1D9E75; margin-bottom: 1rem; }
+    .footer { text-align: center; padding: 2rem; color: #888; font-size: 0.9rem; border-top: 1px solid #e0e0e0; margin-top: 4rem; }
+    .adsense { background: #f5f5f5; min-height: 100px; display: flex; align-items: center; justify-content: center; color: #999; margin: 2rem; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a href="/" class="logo">rodaja.cl</a>
+    <p style="color:#666">Datos climáticos para Chile</p>
+    <nav>
+      <a href="/">Inicio</a>
+      <a href="/explorador">Explorador</a>
+      <a href="/docs">Documentación</a>
+    </nav>
+  </header>
+  <section class="hero">
+    <h1>Explorador Climático</h1>
+    <p>Accede a datos observados y de modelos climáticos. Visualiza series temporales por estación y descarga datos en CSV.</p>
+    <a href="/explorador" class="btn">Ir al Explorador</a>
+  </section>
+  <div class="adsense">AdSense placeholder 1</div>
+  <section class="features">
+    <div class="feature-card">
+      <h3>Mapa interactivo</h3>
+      <p>Explora estaciones en el mapa. Filtra por zona y tipo de dato.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Series temporales</h3>
+      <p>Visualiza gráficos de temperatura, precipitación y otras variables.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Descargas</h3>
+      <p>Solicita descargas por email para series largas en CSV.</p>
+    </div>
+  </section>
+  <section class="plans">
+    <div class="plan-card">
+      <h3>Básico</h3>
+      <p>Acceso gratuito a consultas en línea y vista previa.</p>
+    </div>
+    <div class="plan-card featured">
+      <h3>Descargas</h3>
+      <p>Series completas por email. Respuesta en ~5 minutos.</p>
+    </div>
+  </section>
+  <div class="adsense">AdSense placeholder 2</div>
+  <footer class="footer">
+    <p>rodaja.cl - Explorador Climático para Chile</p>
+  </footer>
+</body>
+</html>

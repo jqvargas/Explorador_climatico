@@ -1,0 +1,58 @@
+Warning messages:
+1: package 'DBI' was built under R version 4.3.3 
+2: package 'RPostgres' was built under R version 4.3.3 
+3: package 'glue' was built under R version 4.3.3 
+4: package 'cli' was built under R version 4.3.3 
+5: package 'dotenv' was built under R version 4.3.1 
+
+── TimescaleDB Migration ───────────────────────────────────────────────────────
+ℹ Loading environment...
+ℹ Loaded env from: sql-backend/ATT15580.env
+ℹ Connecting to databases...
+NOTICE:  extension "timescaledb" already exists, skipping
+
+ℹ Skipping estacion (already migrated)
+ℹ Skipping estacion_atributos_extra (already migrated)
+ℹ Skipping fuente (already migrated)
+ℹ Skipping modelo (already migrated)
+ℹ Skipping variable (already migrated)
+ℹ Migrating large table: observacion (chunk size: 5e+05)
+→ table: observacion chunk 67/66 complete (0 rows)
+→ table: observacion chunk 66/66 complete (222533 rows)
+✔ observacion: 222533 rows migrated in 66 chunks
+ℹ Migrating large table: observacion_final (chunk size: 5e+05)
+→ table: observacion_final chunk 84/83 complete (0 rows)
+→ table: observacion_final chunk 83/83 complete (47736 rows)
+✔ observacion_final: 47736 rows migrated in 83 chunks
+ℹ Migrating large table: observacion_preliminar (chunk size: 5e+05)
+→ table: observacion_preliminar chunk 39/38 complete (0 rows)
+→ table: observacion_preliminar chunk 38/38 complete (271792 rows)
+✔ observacion_preliminar: 271792 rows migrated in 38 chunks
+ℹ Migrating large table: observacion_modelo (chunk size: 2e+05)
+→ table: observacion_modelo chunk 1189/1559 complete (200000 rows)
+→ table: observacion_modelo chunk 1190/1559 complete (200000 rows)
+→ table: observacion_modelo chunk 1191/1559 complete (200000 rows)
+→ table: observacion_modelo chunk 1192/1559 complete (200000 rows)
+→ table: observacion_modelo chunk 1193/1559 complete (200000 rows)
+→ table: observacion_modelo chunk 1194/1559 complete (200000 rows)
+→ table: observacion_modelo chunk 1195/1559 complete (200000 rows)
+→ table: observacion_modelo chunk 1196/1559 complete (200000 rows)
+→ table: observacion_modelo chunk 1197/1559 complete (200000 rows)
+[2026-03-16 15:53:35] Creating table  observacion_preliminar  (DROP + CREATE + hypertable)...
+[2026-03-16 15:53:35] Table  observacion_preliminar  created. Converting to hypertable...
+[2026-03-16 15:53:35] Hypertable  observacion_preliminar  ready. Starting chunk copy...
+[2026-03-16 16:14:15] Creating table  observacion_modelo  (DROP + CREATE + hypertable)...
+[2026-03-16 16:14:15] Table  observacion_modelo  created. Converting to hypertable...
+[2026-03-16 16:14:15] Hypertable  observacion_modelo  ready. Starting chunk copy...
+[2026-03-16 17:04:41] FATAL:  Failed to read chunk 162 of observacion_modelo: Failed to prepare query : server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+
+[2026-03-16 23:46:10] FATAL:  Failed to read chunk 679 of observacion_modelo: Failed to fetch row : server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+
+[2026-03-17 03:09:14] FATAL:  Failed to read chunk 763 of observacion_modelo: Failed to prepare query : server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+
