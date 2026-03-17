@@ -40,7 +40,7 @@ mapa_server <- function(id, estaciones, estacion_id) {
       df <- estaciones()
       r <- df[df$id == eid, , drop = FALSE]
       if (nrow(r) > 0) {
-        leaflet::leafletProxy("mapa", session = session) |>
+        leaflet::leafletProxy(ns("mapa"), session = session) |>
           leaflet::setView(lng = r$lon[1], lat = r$lat[1], zoom = 10)
       }
     }, ignoreNULL = TRUE)
@@ -51,6 +51,9 @@ mapa_server <- function(id, estaciones, estacion_id) {
     }, ignoreNULL = TRUE)
   })
 }
+
+
+
 
 
 

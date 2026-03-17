@@ -1,24 +1,8 @@
 # global.R - se ejecuta PRIMERO
 `%||%` <- function(x, y) if (is.null(x) || is.na(x)) y else x
 
-library(fresh)
-tema_rodaja <- fresh::create_theme(
-  fresh::adminlte_color(light_blue = "#DF9531"),
-  fresh::adminlte_sidebar(
-    dark_bg              = "#D5DADC",
-    dark_hover_bg        = "#b8bec0",
-    dark_color           = "#394553",
-    dark_hover_color     = "#000000",
-    dark_submenu_bg      = "#b8bec0",
-    dark_submenu_color   = "#394553",
-    dark_submenu_hover_color = "#000000"
-  ),
-  fresh::adminlte_global(
-    content_bg  = "#D5DADC",
-    box_bg      = "#FFFFFF",
-    info_box_bg = "#FFFFFF"
-  )
-)
+library(shinyWidgets)
+library(shinythemes)
 
 source("config.R", local = FALSE)
 # API helpers (inline)
@@ -40,5 +24,3 @@ source("modules/tabla.R", local = FALSE)
 source("modules/descarga.R", local = FALSE)
 # Componentes UI (estructura)
 source("ui_components.R", local = FALSE)
-
-
