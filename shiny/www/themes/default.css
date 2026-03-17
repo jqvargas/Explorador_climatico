@@ -1,0 +1,46 @@
+/* Theme: default - Explorador Climatico
+   Variables CSS: cambia estos valores para rediseñar rapido */
+:root {
+  --ec-sidebar-padding: 12px 14px 24px;
+  --ec-sidebar-max-height: calc(100vh - 140px);
+  --ec-block-margin: 16px;
+  --ec-label-size: 12px;
+  --ec-label-color: #555;
+  --ec-input-padding: 6px 10px;
+  --ec-input-radius: 4px;
+  --ec-btn-apply-padding: 6px 12px;
+  --ec-btn-apply-size: 12px;
+  --ec-btn-apply-bg: #ecf0f1;
+  --ec-btn-apply-border: #bdc3c7;
+  --ec-btn-apply-hover-bg: #dfe6e9;
+  --ec-btn-apply-hover-border: #95a5a6;
+}
+.ec-sidebar-filters {
+  padding: var(--ec-sidebar-padding);
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: var(--ec-sidebar-max-height);
+}
+.ec-sidebar-filters * { box-sizing: border-box !important; }
+.ec-filter-block { margin-bottom: var(--ec-block-margin); }
+.ec-filter-block .form-group { margin-bottom: 4px; }
+.ec-filter-block .shiny-input-container { width: 100% !important; max-width: 100% !important; }
+.ec-filter-block label { font-size: var(--ec-label-size); font-weight: 600; color: var(--ec-label-color); }
+.ec-filter-block select, .ec-filter-block .form-control {
+  width: 100% !important; max-width: 100% !important;
+  padding: var(--ec-input-padding); border-radius: var(--ec-input-radius);
+}
+.ec-btn-apply {
+  width: 100% !important; max-width: 100% !important;
+  padding: var(--ec-btn-apply-padding) !important; font-size: var(--ec-btn-apply-size) !important;
+  margin-top: 6px; border-radius: var(--ec-input-radius);
+  background: var(--ec-btn-apply-bg) !important;
+  border: 1px solid var(--ec-btn-apply-border) !important;
+  color: #2c3e50 !important;
+}
+.ec-btn-apply:hover {
+  background: var(--ec-btn-apply-hover-bg) !important;
+  border-color: var(--ec-btn-apply-hover-border) !important;
+}
+.ec-btn-ver-datos { width: 100% !important; margin-top: 4px; padding: 10px 16px !important; }
+.ec-separator { margin: 16px 0; }

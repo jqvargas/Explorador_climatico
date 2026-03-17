@@ -104,8 +104,14 @@ server <- function(input, output, session) {
     shiny::updateSelectInput(session, "estacion", choices = ch, selected = sel)
   })
 
+  output$datos_listos <- shiny::renderText({
+    if (ver_datos_click() > 0) "1" else "0"
+  })
+  shiny::outputOptions(output, "datos_listos", suspendWhenHidden = FALSE)
+
   mapa_server("mapa", estaciones, estacion_id)
   grafico_server("grafico", estacion_id_ver, variable_id, ver_datos_click, datos)
   tabla_server("tabla", datos)
   descarga_server("descarga", variable_id, estacion_id_ver)
 }
+

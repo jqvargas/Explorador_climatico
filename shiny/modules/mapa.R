@@ -1,7 +1,7 @@
 #' @export
 mapa_ui <- function(id) {
   ns <- shiny::NS(id)
-  leaflet::leafletOutput(ns("mapa"), height = 400)
+  leaflet::leafletOutput(ns("mapa"), height = "100%")
 }
 
 #' @export
@@ -51,3 +51,6 @@ mapa_server <- function(id, estaciones, estacion_id) {
     }, ignoreNULL = TRUE)
   })
 }
+
+
+

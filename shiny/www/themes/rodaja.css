@@ -1,0 +1,185 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+* { font-family: 'Inter', sans-serif !important; }
+
+/* Header */
+.main-header .navbar,
+.main-header .logo {
+  background-color: #394553 !important;
+  border-bottom: 1px solid #2e3a46 !important;
+}
+.main-header .logo:hover { background-color: #394553 !important; }
+.main-header .logo span { color: #F7F9FA !important; }
+
+/* Body — mismo gris que CartoDB.Positron (#D5DADC) para que el mapa se funda */
+.content-wrapper { background-color: #D5DADC !important; }
+
+/* Boxes */
+.box {
+  background: #FFFFFF !important;
+  border: 1px solid #CACEB8 !important;
+  border-top: none !important;
+  border-radius: 8px !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
+}
+.box-header {
+  background: #FFFFFF !important;
+  border-bottom: 1px solid #CACEB8 !important;
+  border-radius: 8px 8px 0 0 !important;
+  color: #000000 !important;
+  font-weight: 600 !important;
+}
+
+/* Sidebar — mismo color que el mapa (#D5DADC), controles sutiles con hover */
+.main-sidebar,
+.left-side,
+.sidebar {
+  background-color: #D5DADC !important;
+  border-right: none !important;
+}
+.main-sidebar .sidebar-menu {
+  background: transparent !important;
+}
+.sidebar-menu > li > a {
+  color: #394553 !important;
+  background: transparent !important;
+  border-left: 3px solid transparent !important;
+}
+.sidebar-menu > li > a:hover,
+.sidebar-menu > li.active > a {
+  background: rgba(223,149,49,0.15) !important;
+  border-left: 3px solid #DF9531 !important;
+  color: #000000 !important;
+}
+
+/* Inputs en sidebar — estilo claro, flotante sobre fondo */
+.ec-sidebar-filters .form-control,
+.ec-sidebar-filters .selectize-input {
+  background-color: #FFFFFF !important;
+  border: 1px solid #CACEB8 !important;
+  color: #394553 !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+}
+.ec-sidebar-filters .selectize-input.focus,
+.ec-sidebar-filters .form-control:focus {
+  border-color: #DF9531 !important;
+  box-shadow: 0 0 0 2px rgba(223,149,49,0.25) !important;
+}
+.ec-sidebar-filters .selectize-dropdown {
+  background: #FFFFFF !important;
+  border: 1px solid #CACEB8 !important;
+  color: #394553 !important;
+}
+.ec-sidebar-filters .selectize-dropdown .option:hover,
+.ec-sidebar-filters .selectize-dropdown .active {
+  background: rgba(223,149,49,0.15) !important;
+  color: #394553 !important;
+}
+.ec-sidebar-filters label {
+  color: #394553 !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.07em !important;
+  font-weight: 500 !important;
+}
+
+/* Botón Aplicar — ghost, aparece en hover */
+.ec-filter-block .btn-sm {
+  background: transparent !important;
+  border: 1px solid #CACEB8 !important;
+  color: #8C9091 !important;
+  border-radius: 6px !important;
+}
+.ec-filter-block .btn-sm:hover {
+  background: #DF9531 !important;
+  border-color: #DF9531 !important;
+  color: #fff !important;
+}
+.ec-separator {
+  border-color: #CACEB8 !important;
+  opacity: 0.6;
+}
+
+/* Botón primario "Ver datos" */
+.btn-primary {
+  background: #DF9531 !important;
+  border-color: #DF9531 !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  color: #fff !important;
+}
+.btn-primary:hover {
+  background: #c4821e !important;
+  border-color: #c4821e !important;
+}
+
+/* Tabla DT */
+table.dataTable thead th {
+  background: #D5DADC !important;
+  border-bottom: 2px solid #CACEB8 !important;
+  color: #8C9091 !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+}
+table.dataTable tbody tr:hover td {
+  background: #D5DADC !important;
+}
+.paginate_button.current {
+  background: #DF9531 !important;
+  color: #fff !important;
+  border-radius: 4px !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #D5DADC; }
+::-webkit-scrollbar-thumb { background: #CACEB8; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #DF9531; }
+
+/* Mapa — fundido con el fondo, sin recuadro */
+#shiny-tab-mapa .box,
+#shiny-tab-mapa .box-body {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+#shiny-tab-mapa .box-header { display: none !important; }
+.leaflet-container {
+  background: #D5DADC !important;
+  border-radius: 0 !important;
+}
+
+
+
+
+/* Layout principal: mapa full + section datos condicional */
+.content-wrapper .content { padding: 0 !important; overflow: hidden !important; }
+.ec-main-content {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 50px);
+  overflow: hidden;
+}
+.ec-map-container {
+  flex: 1 1 0;
+  min-height: 300px;
+  position: relative;
+  background: transparent;
+}
+.ec-map-container .shiny-html-output,
+.ec-map-container .leaflet,
+.ec-map-container .leaflet-container {
+  height: 100% !important;
+  min-height: 300px;
+}
+.ec-datos-section {
+  flex: 0 0 auto;
+  max-height: 55vh;
+  overflow-y: auto;
+  padding: 15px;
+}
+
+
