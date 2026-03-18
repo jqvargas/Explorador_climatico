@@ -2,8 +2,8 @@
 grafico_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::div(class = "ec-grafico-wrap",
-    shiny::uiOutput(ns("rango_fechas_ui")),
-    shinycssloaders::withSpinner(plotly::plotlyOutput(ns("grafico"), height = 350))
+    shinycssloaders::withSpinner(plotly::plotlyOutput(ns("grafico"), height = 350)),
+    shiny::uiOutput(ns("rango_fechas_ui"))
   )
 }
 

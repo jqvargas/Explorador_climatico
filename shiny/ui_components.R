@@ -34,7 +34,8 @@ ec_dashboard_layout <- function(title = APP_TITLE) {
       shiny::div(class = "outer",
         shiny::tags$head(
           shiny::tags$link(rel = "stylesheet", type = "text/css", href = "themes/rodaja.css"),
-          shiny::tags$link(rel = "stylesheet", href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css", crossorigin = "anonymous")
+          shiny::tags$link(rel = "stylesheet", href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css", crossorigin = "anonymous"),
+          shiny::tags$script(src = "resize-panel.js")
         ),
 
         leaflet::leafletOutput("mapa-mapa", width = "100%", height = "100%"),
@@ -69,9 +70,10 @@ ec_dashboard_layout <- function(title = APP_TITLE) {
             id = "panel_datos",
             fixed = TRUE, draggable = TRUE,
             left = 0, right = 0, bottom = 0, top = "auto",
-            width = "100%", height = "400px",
+            width = "100%", height = "auto",
             class = "ec-panel-datos-inner",
-            style = "background:rgba(255,255,255,0.95);padding:0;border-radius:8px 8px 0 0;box-shadow:0 -2px 12px rgba(0,0,0,0.08);overflow:hidden;display:flex;flex-direction:column;",
+            style = "background:rgba(255,255,255,0.95);padding:0;border-radius:8px 8px 0 0;box-shadow:0 -2px 12px rgba(0,0,0,0.08);overflow:visible;display:flex;flex-direction:column;min-height:280px;max-height:85vh;height:400px;",
+            shiny::div(class = "ec-panel-resize-handle", title = "Arrastra para cambiar tamano"),
             shiny::div(class = "ec-panel-datos-header",
               shiny::h5("Serie temporal", style = "font-weight:600;margin:0;color:#394553;flex:1;"),
               shiny::div(class = "ec-panel-datos-btns",
@@ -81,7 +83,7 @@ ec_dashboard_layout <- function(title = APP_TITLE) {
               )
             ),
             shiny::div(class = "ec-panel-datos-body",
-              style = "padding:16px;overflow:auto;flex:1;min-height:0;",
+              style = "padding:16px;overflow:visible;flex:1 1 auto;",
               grafico_ui("grafico")
             )
           )

@@ -110,14 +110,26 @@ div.outer {
 
 .ec-panel-btn { display: inline-flex !important; align-items: center !important; justify-content: center !important; }
 
-/* Barra rango de fechas - serie temporal */
-.ec-rango-fechas { margin-bottom: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0; }
-.ec-rango-fechas-barra { margin-bottom: 12px; }
+/* Barra rango fechas - compacta, debajo del grafico */
+.ec-rango-fechas { margin: 6px 0 0 0; padding: 6px 10px; background: #f8f9fa; border-radius: 6px; border: 1px solid #e0e0e0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ec-rango-fechas-barra { flex: 1; min-width: 120px; margin: 0 !important; }
+.ec-rango-fechas-barra .form-group { margin: 0 !important; }
 .ec-rango-fechas-barra .irs--flat .irs-bar { background: #DF9531; }
 .ec-rango-fechas-barra .irs--flat .irs-handle { border-color: #DF9531; background: #DF9531; }
-.ec-rango-fechas-inputs { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
-.ec-rango-input-group { display: flex; flex-direction: column; gap: 4px; }
-.ec-rango-input-group label { font-size: 11px; color: #8C9091; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
-.ec-rango-apply { margin-left: auto; }
-.ec-rango-fechas-inputs .form-group { margin-bottom: 0; }
+.ec-rango-fechas-inputs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 !important; }
+.ec-rango-input-group { display: flex; flex-direction: row; align-items: center; gap: 4px; margin: 0 !important; }
+.ec-rango-input-group label { font-size: 10px; color: #8C9091; text-transform: uppercase; letter-spacing: .03em; margin: 0 2px 0 0 !important; white-space: nowrap; }
+.ec-rango-input-group .form-group { margin: 0 !important; }
+.ec-rango-input-group input.form-control { padding: 2px 6px; font-size: 11px; height: 28px !important; width: 105px !important; }
+.ec-rango-apply { margin-left: 4px; }
+.ec-rango-apply .btn { padding: 4px 10px; font-size: 11px; }
+.ec-rango-fechas-inputs .form-group { margin-bottom: 0 !important; }
 
+
+/* Resize handle - arrastrar para cambiar tamano del panel */
+.ec-panel-resize-handle { flex: 0 0 10px; height: 10px; width: 100%; cursor: ns-resize; z-index: 10; flex-shrink: 0; }
+.ec-panel-resize-handle:hover { background: rgba(223,149,49,0.2); }
+.ec-panel-resize-handle::after { content: ''; position: absolute; top: 4px; left: 50%; transform: translateX(-50%); width: 40px; height: 2px; background: #CACEB8; border-radius: 1px; }
+.ec-panel-resize-handle:hover::after { background: #DF9531; }
+
+.ec-panel-datos.ec-panel-minimized .ec-panel-resize-handle { display: none !important; }
