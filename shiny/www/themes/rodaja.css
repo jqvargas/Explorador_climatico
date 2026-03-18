@@ -29,44 +29,174 @@ div.outer {
   background: transparent !important;
 }
 
-/* Panel filtros overlay - mismo estilo hover */
-#panel_filtros {
-  border: 1px solid #e0e0e0 !important;
+/* ========== Drawer de filtros (unica fuente de verdad) ========== */
+
+/* Edge bar y boton */
+.ec-edge-bar {
+  position: fixed;
+  top: 170px;
+  left: 0;
+  z-index: 1500;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
 }
-#panel_filtros .ec-sidebar-filters label {
-  color: #8C9091 !important;
-  font-size: 11px !important;
-  letter-spacing: .07em !important;
-  text-transform: uppercase !important;
+.ec-edge-btn {
+  width: 52px;
+  min-width: 52px;
+  height: 44px;
+  border: none;
+  border-radius: 0 10px 10px 0;
+  background: rgba(57,69,83,0.92);
+  color: #F7F9FA;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 2px 2px 16px rgba(0,0,0,0.2);
+  transform: translateX(0);
+  transition: transform 0.25s ease, background 0.2s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
-#panel_filtros .form-control,
-#panel_filtros .selectize-input {
-  border: 1px solid #CACEB8 !important;
-  border-radius: 6px !important;
-  font-size: 13px !important;
+.ec-edge-btn:hover {
+  transform: translateX(4px);
+  background: rgba(223,149,49,0.95);
+  color: #fff;
 }
-#panel_filtros .selectize-input.focus,
-#panel_filtros .form-control:focus {
-  border-color: #DF9531 !important;
-  box-shadow: 0 0 0 2px rgba(223,149,49,0.2) !important;
+.ec-edge-btn .fa { font-size: 18px; }
+
+/* Overlay */
+.ec-drawer-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 1200;
+  background: rgba(0,0,0,0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
 }
-#panel_filtros .selectize-dropdown .option:hover {
-  background: #DF9531 !important;
-  color: #fff !important;
+.ec-drawer-overlay.ec-drawer-open {
+  opacity: 1;
+  pointer-events: auto;
 }
-#panel_filtros .btn-sm, #panel_filtros .ec-btn-apply {
-  background: #f5f5f5 !important;
-  border: 1px solid #CACEB8 !important;
-  color: #394553 !important;
-  border-radius: 6px !important;
-  font-size: 11px !important;
-  font-weight: 600 !important;
+
+/* Drawer panel */
+.ec-drawer {
+  pointer-events: none;
+  position: fixed;
+  top: 222px;
+  left: 0;
+  width: 280px;
+  max-width: 85vw;
+  max-height: 60vh;
+  z-index: 1201;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  visibility: hidden;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateY(-100%);
+  transition: visibility 0.3s, opacity 0.3s, transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  border-radius: 0 0 10px 0;
 }
-#panel_filtros .btn-sm:hover, #panel_filtros .ec-btn-apply:hover {
-  background: #DF9531 !important;
-  border-color: #DF9531 !important;
-  color: #fff !important;
+.ec-drawer.ec-drawer-open {
+  visibility: visible;
+  opacity: 1;
+  overflow-y: auto;
+  transform: translateY(0);
+  pointer-events: auto;
 }
+
+/* Drawer header y body - transparentes */
+.ec-drawer-header,
+.ec-drawer-body,
+.ec-drawer .ec-sidebar-filters,
+.ec-drawer .ec-filter-block {
+  background: transparent;
+}
+.ec-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 12px 16px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.ec-drawer-title {
+  font-weight: 600;
+  font-size: 16px;
+  color: #F7F9FA;
+}
+.ec-drawer-body {
+  padding: 12px 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Wrappers selectize - sin borde para evitar doble borde */
+.ec-drawer .form-group,
+.ec-drawer .shiny-input-container,
+.ec-drawer .selectize-control {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  margin: 0;
+}
+.ec-drawer .selectize-control .form-control,
+.ec-drawer .selectize-control select {
+  border: none;
+  box-shadow: none;
+}
+
+/* Selectize visible - unico borde */
+.ec-drawer .selectize-input {
+  height: 36px;
+  min-height: 36px;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 6px;
+  font-size: 13px;
+  background: rgba(255,255,255,0.10);
+  color: #F7F9FA;
+  box-shadow: none;
+  outline: none;
+}
+.ec-drawer .selectize-input.focus {
+  border-color: #DF9531;
+  box-shadow: 0 0 0 2px rgba(223,149,49,0.25);
+}
+.ec-drawer .selectize-dropdown .option:hover {
+  background: #DF9531;
+  color: #fff;
+}
+
+/* Filtros en fila */
+.ec-filter-block { margin-bottom: 8px; }
+.ec-filter-block:last-child { margin-bottom: 0; }
+.ec-filter-row { display: flex; gap: 6px; align-items: center; }
+.ec-filter-select { flex: 1; min-width: 0; max-width: 200px; }
+.ec-filter-select .form-group, .ec-filter-select .selectize-control { margin: 0; }
+.ec-btn-apply {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 6px;
+  color: #F7F9FA;
+  font-size: 11px;
+  font-weight: 600;
+}
+.ec-drawer .ec-btn-apply:hover {
+  background: #DF9531;
+  border-color: #DF9531;
+  color: #fff;
+}
+.ec-drawer .btn-primary { width: 100%; margin-top: 12px; }
 
 /* Boton Ver datos */
 .btn-primary {
@@ -78,7 +208,10 @@ div.outer {
 }
 .btn-primary:hover { background: #c4821e !important; }
 
-/* Panel Serie temporal - horizontal en parte inferior, cerrar/minimizar/maximizar */
+/* Selectize dropdown sobre drawer */
+.selectize-dropdown { z-index: 1300 !important; }
+
+/* Panel Serie temporal */
 .ec-panel-datos { transition: all 0.25s ease; }
 .ec-panel-datos.ec-panel-closed #panel_datos { transform: translateY(100%); opacity: 0; pointer-events: none; }
 .ec-panel-datos.ec-panel-minimized .ec-grafico-wrap,
@@ -95,22 +228,29 @@ div.outer {
 .ec-panel-btn-close:hover { background: #dc3545 !important; color: #fff !important; }
 .ec-panel-btn .glyphicon { font-family: "Glyphicons Halflings" !important; font-size: 14px; }
 .ec-panel-btn .fa, .ec-panel-btn i { font-family: "FontAwesome" !important; font-size: 14px; }
-.ec-panel-btn .ec-panel-icon { font-size: 18px; line-height: 1; font-weight: 600; display: inline-block; }
-/* Iconos vía CSS (independientes de fuentes) */
-.ec-panel-btn-minimize::before { font-family: "Segoe UI Symbol", "Arial Unicode MS", sans-serif; content: "\2212"; font-size: 18px; font-weight: 600; display: inline-block; line-height: 1; }
-.ec-panel-btn-maximize::before { font-family: "Segoe UI Symbol", "Arial Unicode MS", sans-serif; content: "\25A1"; font-size: 18px; font-weight: 600; display: inline-block; line-height: 1; }
-.ec-panel-btn-close::before { font-family: "Segoe UI Symbol", "Arial Unicode MS", sans-serif; content: "\00D7"; font-size: 20px; font-weight: 600; display: inline-block; line-height: 1; }
+.ec-panel-btn-minimize::before { font-family: "Segoe UI Symbol", sans-serif; content: "\2212"; font-size: 18px; font-weight: 600; display: inline-block; line-height: 1; }
+.ec-panel-btn-maximize::before { font-family: "Segoe UI Symbol", sans-serif; content: "\25A1"; font-size: 18px; font-weight: 600; display: inline-block; line-height: 1; }
+.ec-panel-btn-close::before { font-family: "Segoe UI Symbol", sans-serif; content: "\00D7"; font-size: 20px; font-weight: 600; display: inline-block; line-height: 1; }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: #F7F9FA; }
 ::-webkit-scrollbar-thumb { background: #CACEB8; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #DF9531; }
-/* Ocultar input estado del panel */ #panel_datos_state, .form-group.shiny-input-container input#panel_datos_state { position: absolute !important; left: -9999px !important; }
-
+#panel_datos_state, .form-group.shiny-input-container input#panel_datos_state { position: absolute !important; left: -9999px !important; }
 .ec-panel-btn { display: inline-flex !important; align-items: center !important; justify-content: center !important; }
 
-/* Barra rango fechas - compacta, debajo del grafico */
+/* Resize handle */
+.ec-panel-resize-handle { flex: 0 0 10px; height: 10px; width: 100%; cursor: ns-resize; z-index: 10; flex-shrink: 0; }
+.ec-panel-resize-handle:hover { background: rgba(223,149,49,0.2); }
+.ec-panel-resize-handle::after { content: ''; position: absolute; top: 4px; left: 50%; transform: translateX(-50%); width: 40px; height: 2px; background: #CACEB8; border-radius: 1px; }
+.ec-panel-resize-handle:hover::after { background: #DF9531; }
+.ec-panel-datos.ec-panel-minimized .ec-panel-resize-handle { display: none !important; }
+.ec-panel-top-bar { display: flex; align-items: center; flex: 0 0 auto; min-height: 36px; padding: 0 8px; }
+.ec-panel-top-bar .ec-panel-resize-handle { flex: 1; }
+.ec-panel-top-bar .ec-panel-datos-btns { margin-left: 4px; }
+
+/* Barra rango fechas */
 .ec-rango-fechas { margin: 6px 0 0 0; padding: 6px 10px; background: #f8f9fa; border-radius: 6px; border: 1px solid #e0e0e0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .ec-rango-fechas-barra { flex: 1; min-width: 120px; margin: 0 !important; }
 .ec-rango-fechas-barra .form-group { margin: 0 !important; }
@@ -124,60 +264,10 @@ div.outer {
 .ec-rango-apply { margin-left: 4px; }
 .ec-rango-apply .btn { padding: 4px 10px; font-size: 11px; }
 .ec-rango-fechas-inputs .form-group { margin-bottom: 0 !important; }
-
-
-/* Resize handle - arrastrar para cambiar tamano del panel */
-.ec-panel-resize-handle { flex: 0 0 10px; height: 10px; width: 100%; cursor: ns-resize; z-index: 10; flex-shrink: 0; }
-.ec-panel-resize-handle:hover { background: rgba(223,149,49,0.2); }
-.ec-panel-resize-handle::after { content: ''; position: absolute; top: 4px; left: 50%; transform: translateX(-50%); width: 40px; height: 2px; background: #CACEB8; border-radius: 1px; }
-.ec-panel-resize-handle:hover::after { background: #DF9531; }
-
-.ec-panel-datos.ec-panel-minimized .ec-panel-resize-handle { display: none !important; }
-
-/* Top bar: resize handle + botones (no ocupan espacio del grafico) */
-.ec-panel-top-bar { display: flex; align-items: center; flex: 0 0 auto; min-height: 36px; padding: 0 8px; }
-.ec-panel-top-bar .ec-panel-resize-handle { flex: 1; }
-.ec-panel-top-bar .ec-panel-datos-btns { margin-left: 4px; }
-
-/* dateRangeInput compacto debajo del grafico */
 .ec-rango-fechas .form-group { margin: 0 !important; display: flex !important; align-items: center !important; gap: 6px !important; flex-wrap: wrap !important; }
 .ec-rango-fechas .form-group label { display: none !important; }
 .ec-rango-fechas input.form-control { padding: 2px 6px !important; font-size: 11px !important; height: 28px !important; width: 100px !important; }
-
-/* Panel Filtros - glassmorphism + minimizable */
-.ec-panel-filtros { display: flex; flex-direction: column; }
-.ec-panel-filtros-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 12px; cursor: default; flex-shrink: 0;
-}
-.ec-panel-filtros-title { font-weight: 600; font-size: 13px; color: #394553; }
-.ec-panel-filtros-body { padding: 0 12px 12px; overflow-y: auto; transition: max-height 0.25s ease; }
-.ec-panel-filtros.ec-collapsed .ec-panel-filtros-body { max-height: 0; padding: 0 12px; overflow: hidden; opacity: 0; }
-.ec-btn-toggle-filtros {
-  background: transparent !important; border: none !important; color: #394553 !important;
-  padding: 4px 8px !important; font-size: 16px !important; cursor: pointer !important;
-}
-.ec-btn-toggle-filtros:hover { color: #DF9531 !important; }
-
-/* Filtros compactos - select + aplicar en fila */
-.ec-filter-block { margin-bottom: 8px; }
-.ec-filter-label { display: block; font-size: 10px; color: #8C9091; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 2px; }
-.ec-filter-row { display: flex; gap: 6px; align-items: center; }
-.ec-filter-select { flex: 1; min-width: 0; }
-.ec-filter-select .form-group, .ec-filter-select .selectize-control { margin: 0 !important; }
-.ec-btn-apply { flex-shrink: 0; width: 32px !important; height: 32px !important; padding: 0 !important; min-width: 32px !important; }
-.ec-filter-block:last-child { margin-bottom: 0; }
-
-/* Colapsado: panel angosto, solo boton visible */
-.ec-panel-filtros.ec-collapsed { width: 48px !important; min-width: 48px !important; }
-.ec-panel-filtros.ec-collapsed .ec-panel-filtros-header { padding: 10px; justify-content: center; }
-.ec-panel-filtros.ec-collapsed .ec-panel-filtros-title { display: none; }
-
-/* Movil: panel mas angosto, colapsado muestra solo boton para maximizar mapa */
-@media (max-width: 480px) {
-  #panel_filtros { width: 260px !important; left: 10px !important; }
-  .ec-panel-filtros.ec-collapsed { width: 56px !important; min-width: 56px !important; }
-  .ec-panel-filtros.ec-collapsed .ec-panel-filtros-header { padding: 8px; justify-content: center; }
-  .ec-panel-filtros.ec-collapsed .ec-panel-filtros-title { display: none; }
-}
-
+/* Override Bootstrap - mayor especificidad con ID */
+#ec_drawer_filtros { background: transparent !important; }
+#ec_drawer_filtros .selectize-control { border: none !important; box-shadow: none !important; background: transparent !important; }
+#ec_drawer_filtros .selectize-input { border: 1px solid rgba(255,255,255,0.35) !important; background: rgba(255,255,255,0.10) !important; box-shadow: none !important; }

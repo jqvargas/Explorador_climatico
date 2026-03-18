@@ -90,8 +90,8 @@ server <- function(input, output, session) {
   shiny::observeEvent(input$ver_datos, {
     ver_datos_click(ver_datos_click() + 1)
     session$sendCustomMessage("panel_datos_state", 1)
+    session$sendCustomMessage("drawer_close", TRUE)
   })
-  shiny::observeEvent(input$toggle_filtros, { session$sendCustomMessage("panel_filtros_toggle", TRUE) })
   shiny::observeEvent(input$panel_close, { session$sendCustomMessage("panel_datos_state", 0) })
   shiny::observeEvent(input$panel_minimize, { session$sendCustomMessage("panel_datos_state", 2) })
   shiny::observeEvent(input$panel_maximize, {
@@ -103,7 +103,7 @@ server <- function(input, output, session) {
   shiny::observe({
     v <- variables()
     if (nrow(v) > 0) {
-      ch <- c("Todas" = "", setNames(as.character(v$id), v$nombre))
+      ch <- c("Filtrar por variable" = "", setNames(as.character(v$id), v$nombre))
       curr <- input$variable
       sel <- if (!is.null(curr) && curr != "" && curr %in% as.character(v$id)) curr else ""
       shiny::updateSelectInput(session, "variable", choices = ch, selected = sel)
@@ -113,14 +113,14 @@ server <- function(input, output, session) {
   shiny::observe({
     f <- fuentes()
     if (nrow(f) > 0) {
-      ch <- c("Todas" = "0", setNames(as.character(f$id), f$nombre))
+      ch <- c("Filtrar por operador" = "0", setNames(as.character(f$id), f$nombre))
       shiny::updateSelectInput(session, "operador", choices = ch, selected = "0")
     }
   })
 
   shiny::observe({
     e <- estaciones()
-    ch <- c("Selecciona estacion" = "")
+    ch <- c("Filtrar por estación" = "")
     if (nrow(e) > 0) ch <- c(ch, setNames(as.character(e$id), e$nombre))
     curr <- input$estacion
     eid <- estacion_id()
