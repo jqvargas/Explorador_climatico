@@ -125,6 +125,15 @@ ec_dashboard_layout <- function(title = APP_TITLE) {
             }
             if(cls) cls.onclick=close;
             if(ovr) ovr.onclick=close;
+            var verDatos = document.getElementById("ver_datos");
+            if(verDatos){
+              verDatos.addEventListener("click", function(){
+                setTimeout(close, 300);
+              });
+              verDatos.addEventListener("touchend", function(){
+                setTimeout(close, 300);
+              }, {passive: true});
+            }
           }
           attach();
           setTimeout(attach, 500);
