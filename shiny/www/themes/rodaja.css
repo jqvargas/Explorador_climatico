@@ -91,7 +91,6 @@ div.outer {
   left: 0;
   width: 280px;
   max-width: 85vw;
-  max-height: 60vh;
   z-index: 1201;
   background: transparent;
   display: flex;
@@ -103,10 +102,7 @@ div.outer {
   transition: visibility 0.3s, opacity 0.3s, transform 0.3s cubic-bezier(0.4,0,0.2,1);
   border-radius: 0 0 10px 0;
 }
-.ec-drawer.ec-drawer-open {
-  visibility: visible;
-  opacity: 1;
-  overflow-y: auto;
+.ec-drawer.ec-drawer-open {  visibility: visible;  opacity: 1;  overflow: visible !important;
   transform: translateY(0);
   pointer-events: auto;
 }

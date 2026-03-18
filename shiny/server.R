@@ -5,15 +5,13 @@ server <- function(input, output, session) {
   ver_datos_click <- shiny::reactiveVal(0)
   periodo_seleccionado <- shiny::reactiveVal(NULL)
 
-  variable_id <- shiny::reactive({
-    v <- input$variable
-    if (is.null(v) || v == "") return(NULL)
+  variable_id <- shiny::reactive({  v <- input$variable
+    if (is.null(v) || v == "" || v == "0") return(NULL)
     as.integer(v)
   })
 
-  estacion_id_ver <- shiny::reactive({
-    e <- input$estacion
-    if (is.null(e) || e == "") return(NULL)
+  estacion_id_ver <- shiny::reactive({  e <- input$estacion
+    if (is.null(e) || e == "" || e == "0") return(NULL)
     as.integer(e)
   })
 
@@ -42,7 +40,7 @@ server <- function(input, output, session) {
     op <- operador_aplicado()
     if (!is.null(op) && op != "" && op != "0") params$id_fuente <- as.integer(op)
     var <- variable_aplicada()
-    if (!is.null(var) && var != "") params$id_variable <- as.integer(var)
+    if (!is.null(var) && var != "" && var != "0") params$id_variable <- as.integer(var)
     dat <- shiny::withProgress(message = "Cargando estaciones...", value = 0, {
       shiny::setProgress(value = 0.3, message = "Consultando API...")
       api_get("/estaciones", params, timeout = API_TIMEOUT_ESTACIONES)
@@ -81,10 +79,13 @@ server <- function(input, output, session) {
   }, ignoreNULL = FALSE)
 
   shiny::observeEvent(input$aplicar_operador, { operador_aplicado(input$operador %||% "0") })
-  shiny::observeEvent(input$aplicar_variable, { variable_aplicada(input$variable %||% "") })
+  shiny::observeEvent(input$aplicar_variable, {
+    v <- input$variable
+    variable_aplicada(if (is.null(v) || v == "" || v == "0") "" else v)
+  })
   shiny::observeEvent(input$aplicar_estacion, {
     e <- input$estacion
-    estacion_id(if (nzchar(e)) as.integer(e) else NULL)
+    estacion_id(if (is.null(e) || e == "" || e == "0") NULL else as.integer(e))
   })
 
   shiny::observeEvent(input$ver_datos, {
@@ -103,9 +104,9 @@ server <- function(input, output, session) {
   shiny::observe({
     v <- variables()
     if (nrow(v) > 0) {
-      ch <- c("Filtrar por variable" = "", setNames(as.character(v$id), v$nombre))
+      ch <- c("— Variable —" = "", setNames(as.character(v$id), v$nombre))
       curr <- input$variable
-      sel <- if (!is.null(curr) && curr != "" && curr %in% as.character(v$id)) curr else ""
+      sel <- if (!is.null(curr) && nzchar(curr) && curr %in% as.character(v$id)) curr else ""
       shiny::updateSelectInput(session, "variable", choices = ch, selected = sel)
     }
   })
@@ -113,19 +114,19 @@ server <- function(input, output, session) {
   shiny::observe({
     f <- fuentes()
     if (nrow(f) > 0) {
-      ch <- c("Filtrar por operador" = "0", setNames(as.character(f$id), f$nombre))
+      ch <- c("— Operador —" = "0", setNames(as.character(f$id), f$nombre))
       shiny::updateSelectInput(session, "operador", choices = ch, selected = "0")
     }
   })
 
   shiny::observe({
     e <- estaciones()
-    ch <- c("Filtrar por estación" = "")
+    ch <- c("— Estación —" = "")
     if (nrow(e) > 0) ch <- c(ch, setNames(as.character(e$id), e$nombre))
     curr <- input$estacion
     eid <- estacion_id()
-    sel <- if (!is.null(curr) && curr != "" && curr %in% as.character(e$id)) curr
-           else if (!is.null(eid) && eid %in% e$id) as.character(eid) else ""
+    sel <- if (!is.null(curr) && nzchar(curr) && curr %in% as.character(e$id)) curr
+           else if (!is.null(eid) && length(eid) > 0 && eid %in% e$id) as.character(eid) else ""
     shiny::updateSelectInput(session, "estacion", choices = ch, selected = sel)
   })
 

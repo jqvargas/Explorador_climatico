@@ -6,10 +6,16 @@ ec_filter_block <- function(select_id, placeholder, choices, button_id, selected
   div(class = "ec-filter-block",
     div(class = "ec-filter-row",
       div(class = "ec-filter-select",
-        shiny::selectInput(select_id, NULL,
+        shiny::selectizeInput(select_id, NULL,
           choices = choices,
           selected = selected,
-          width = "100%", selectize = FALSE)
+          options = list(
+            create = FALSE,
+            searchField = "label",
+            allowEmptyOption = TRUE,
+            selectOnTab = TRUE,
+            openOnFocus = TRUE
+          ))
       ),
       shiny::actionButton(button_id, "", icon = shiny::icon("check"),
         class = "ec-btn-apply", title = "Aplicar")
@@ -19,9 +25,9 @@ ec_filter_block <- function(select_id, placeholder, choices, button_id, selected
 
 ec_sidebar_filters <- function() {
   div(class = "ec-sidebar-filters",
-    ec_filter_block("operador", NULL, c("Filtrar por operador" = "0"), "aplicar_operador", selected = "0"),
-    ec_filter_block("variable", NULL, c("Filtrar por variable" = ""), "aplicar_variable", selected = ""),
-    ec_filter_block("estacion", NULL, c("Filtrar por estación" = ""), "aplicar_estacion", selected = ""),
+    ec_filter_block("operador", NULL, c("— Operador —" = "0"), "aplicar_operador", selected = "0"),
+    ec_filter_block("variable", NULL, c("— Variable —" = ""), "aplicar_variable", selected = ""),
+    ec_filter_block("estacion", NULL, c("— Estación —" = ""), "aplicar_estacion", selected = ""),
     div(class = "ec-filter-block",
       shiny::actionButton("ver_datos", "Ver datos", icon = shiny::icon("play"), class = "btn-primary ec-btn-ver-datos")
     )
@@ -209,6 +215,57 @@ ec_dashboard_layout <- function(title = APP_TITLE) {
   #ec_drawer_filtros select option:hover,
   #ec_drawer_filtros select option:checked {
     background: #DF9531 !important;
+    color: #fff !important;
+  }
+  /* selectizeInput - campo de escritura */
+  #ec_drawer_filtros .selectize-input input {
+    color: #F7F9FA !important;
+    background: transparent !important;
+    font-weight: 600 !important;
+    opacity: 1 !important;
+    caret-color: #F7F9FA !important;
+  }
+  /* Dropdown oscuro con texto claro */
+  #ec_drawer_filtros .selectize-dropdown {
+    background: #1e232a !important;
+    background-color: #1e232a !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    border-radius: 6px !important;
+  }
+  #ec_drawer_filtros .selectize-dropdown .option {
+    color: #F7F9FA !important;
+    background: transparent !important;
+    padding: 8px 12px !important;
+  }
+  #ec_drawer_filtros .selectize-dropdown .option:hover,
+  #ec_drawer_filtros .selectize-dropdown .option.active {
+    background: #DF9531 !important;
+    color: #fff !important;
+  }
+  /* Item seleccionado visible */
+  #ec_drawer_filtros .selectize-input .item {
+    color: #F7F9FA !important;
+    font-weight: 600 !important;
+  }
+  /* Placeholder visible */
+  #ec_drawer_filtros .selectize-input .placeholder {
+    color: rgba(247,249,250,0.9) !important;
+    font-weight: 600 !important;
+  }
+  /* Dropdown fondo oscuro - .selectize-dropdown-content es el contenedor interno */
+  #ec_drawer_filtros .selectize-dropdown,
+  #ec_drawer_filtros .selectize-dropdown-content {
+    background-color: #1e232a !important;
+    background: #1e232a !important;
+  }
+  #ec_drawer_filtros .selectize-dropdown .option {
+    background-color: #1e232a !important;
+    color: #F7F9FA !important;
+  }
+  #ec_drawer_filtros .selectize-dropdown .option.selected,
+  #ec_drawer_filtros .selectize-dropdown .option:hover,
+  #ec_drawer_filtros .selectize-dropdown .option.active {
+    background-color: #DF9531 !important;
     color: #fff !important;
   }
 '))
