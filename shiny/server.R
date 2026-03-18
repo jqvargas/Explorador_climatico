@@ -65,8 +65,12 @@ server <- function(input, output, session) {
     eid <- estacion_id_ver()
     vid <- variable_id()
     if (is.null(eid) || is.null(vid)) return(list(df = data.frame(), error = "Selecciona estacion y variable primero."))
+    hoy <- Sys.Date()
+    f_fin <- format(hoy, "%Y-%m-%d")
+    f_ini <- format(hoy - 730, "%Y-%m-%d")
+    params <- list(estacion_id = eid, variable_id = vid, fecha_inicio = f_ini, fecha_fin = f_fin)
     dat <- shiny::withProgress(message = "Cargando serie temporal...", value = 0.3, {
-      api_get("/datos", list(estacion_id = eid, variable_id = vid), timeout = API_TIMEOUT_DATOS)
+      api_get("/datos", params, timeout = API_TIMEOUT_DATOS)
     })
     if (is.null(dat)) return(list(df = data.frame(), error = "Error de conexion o timeout. La API puede estar ocupada. Intenta de nuevo en unos segundos."))
     if (is.list(dat) && !is.null(dat$error)) return(list(df = data.frame(), error = paste(dat$error, collapse = " ")))

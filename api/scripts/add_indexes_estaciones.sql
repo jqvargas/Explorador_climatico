@@ -13,3 +13,10 @@ ON observacion_final (id_estacion, id_variable);
 CREATE INDEX IF NOT EXISTS idx_estacion_id_fuente 
 ON estacion (id_fuente);
 
+-- Para endpoint /datos: WHERE id_estacion=X AND id_variable=Y AND fecha BETWEEN A AND B ORDER BY fecha
+CREATE INDEX IF NOT EXISTS idx_observacion_final_est_var_fecha 
+ON observacion_final (id_estacion, id_variable, fecha);
+
+-- Para endpoint /datos: WHERE id_estacion=X AND id_variable=Y AND fecha BETWEEN A AND B ORDER BY fecha
+CREATE INDEX IF NOT EXISTS idx_observacion_final_est_var_fecha 
+ON observacion_final (id_estacion, id_variable, fecha);

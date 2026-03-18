@@ -20,17 +20,11 @@ function(estacion_id = "", variable_id = "", fecha_inicio = "", fecha_fin = "", 
   conn <- get_db_connection()
   on.exit(DBI::dbDisconnect(conn))
 
-  # Si no hay fechas, usar rango completo de la BD para esta estacion/variable
+  # Si no hay fechas, usar ultimos 2 anios por defecto (evita consulta MIN/MAX lenta y timeouts)
   if (is.null(fecha_inicio) || fecha_inicio == "" || is.null(fecha_fin) || fecha_fin == "") {
-    rango <- DBI::dbGetQuery(conn, "
-      SELECT MIN(fecha)::text AS fmin, MAX(fecha)::text AS fmax
-      FROM observacion_final WHERE id_estacion = $1 AND id_variable = $2
-    ", params = list(estacion_id, variable_id))
-    if (nrow(rango) == 0 || is.na(rango$fmin) || is.na(rango$fmax)) {
-      return(data.frame())
-    }
-    fecha_inicio <- rango$fmin
-    fecha_fin <- rango$fmax
+    hoy <- format(Sys.Date(), "%Y-%m-%d")
+    fecha_fin <- hoy
+    fecha_inicio <- format(Sys.Date() - 730, "%Y-%m-%d")
   }
 
   q <- "
