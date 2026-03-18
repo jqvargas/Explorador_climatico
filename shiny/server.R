@@ -91,6 +91,7 @@ server <- function(input, output, session) {
     ver_datos_click(ver_datos_click() + 1)
     session$sendCustomMessage("panel_datos_state", 1)
   })
+  shiny::observeEvent(input$toggle_filtros, { session$sendCustomMessage("panel_filtros_toggle", TRUE) })
   shiny::observeEvent(input$panel_close, { session$sendCustomMessage("panel_datos_state", 0) })
   shiny::observeEvent(input$panel_minimize, { session$sendCustomMessage("panel_datos_state", 2) })
   shiny::observeEvent(input$panel_maximize, {

@@ -81,15 +81,15 @@ div.outer {
 /* Panel Serie temporal - horizontal en parte inferior, cerrar/minimizar/maximizar */
 .ec-panel-datos { transition: all 0.25s ease; }
 .ec-panel-datos.ec-panel-closed #panel_datos { transform: translateY(100%); opacity: 0; pointer-events: none; }
-.ec-panel-datos.ec-panel-minimized .ec-panel-datos-body { display: none !important; }
+.ec-panel-datos.ec-panel-minimized .ec-grafico-wrap,
+.ec-panel-datos.ec-panel-minimized .ec-rango-fechas { display: none !important; }
 .ec-panel-datos.ec-panel-minimized #panel_datos { height: 48px !important; min-height: 48px !important; }
-.ec-panel-datos.ec-panel-minimized .ec-panel-datos-header { padding: 8px 16px; }
-.ec-panel-datos.ec-panel-minimized .ec-panel-datos-header h5 { display: none; }
+.ec-panel-datos.ec-panel-minimized .ec-panel-datos-body { display: none !important; }
 .ec-panel-datos.ec-panel-minimized .ec-panel-datos-btns { flex-direction: row; gap: 4px; }
 .ec-panel-datos.ec-panel-minimized .ec-panel-btn { width: 36px !important; height: 36px !important; }
 .ec-panel-datos.ec-panel-maximized #panel_datos { height: 70vh !important; }
-.ec-panel-datos-header { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: #f8f9fa; border-bottom: 1px solid #e0e0e0; }
 .ec-panel-datos-btns { display: flex; gap: 4px; }
+.ec-panel-btns-overlay { position: absolute !important; top: 8px; right: 12px; z-index: 100; }
 .ec-panel-btn { background: #e9ecef !important; border: none !important; color: #394553 !important; width: 32px; height: 32px; padding: 0; border-radius: 6px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; }
 .ec-panel-btn:hover { background: #DF9531 !important; color: #fff !important; }
 .ec-panel-btn-close:hover { background: #dc3545 !important; color: #fff !important; }
@@ -133,3 +133,51 @@ div.outer {
 .ec-panel-resize-handle:hover::after { background: #DF9531; }
 
 .ec-panel-datos.ec-panel-minimized .ec-panel-resize-handle { display: none !important; }
+
+/* Top bar: resize handle + botones (no ocupan espacio del grafico) */
+.ec-panel-top-bar { display: flex; align-items: center; flex: 0 0 auto; min-height: 36px; padding: 0 8px; }
+.ec-panel-top-bar .ec-panel-resize-handle { flex: 1; }
+.ec-panel-top-bar .ec-panel-datos-btns { margin-left: 4px; }
+
+/* dateRangeInput compacto debajo del grafico */
+.ec-rango-fechas .form-group { margin: 0 !important; display: flex !important; align-items: center !important; gap: 6px !important; flex-wrap: wrap !important; }
+.ec-rango-fechas .form-group label { display: none !important; }
+.ec-rango-fechas input.form-control { padding: 2px 6px !important; font-size: 11px !important; height: 28px !important; width: 100px !important; }
+
+/* Panel Filtros - glassmorphism + minimizable */
+.ec-panel-filtros { display: flex; flex-direction: column; }
+.ec-panel-filtros-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; cursor: default; flex-shrink: 0;
+}
+.ec-panel-filtros-title { font-weight: 600; font-size: 13px; color: #394553; }
+.ec-panel-filtros-body { padding: 0 12px 12px; overflow-y: auto; transition: max-height 0.25s ease; }
+.ec-panel-filtros.ec-collapsed .ec-panel-filtros-body { max-height: 0; padding: 0 12px; overflow: hidden; opacity: 0; }
+.ec-btn-toggle-filtros {
+  background: transparent !important; border: none !important; color: #394553 !important;
+  padding: 4px 8px !important; font-size: 16px !important; cursor: pointer !important;
+}
+.ec-btn-toggle-filtros:hover { color: #DF9531 !important; }
+
+/* Filtros compactos - select + aplicar en fila */
+.ec-filter-block { margin-bottom: 8px; }
+.ec-filter-label { display: block; font-size: 10px; color: #8C9091; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 2px; }
+.ec-filter-row { display: flex; gap: 6px; align-items: center; }
+.ec-filter-select { flex: 1; min-width: 0; }
+.ec-filter-select .form-group, .ec-filter-select .selectize-control { margin: 0 !important; }
+.ec-btn-apply { flex-shrink: 0; width: 32px !important; height: 32px !important; padding: 0 !important; min-width: 32px !important; }
+.ec-filter-block:last-child { margin-bottom: 0; }
+
+/* Colapsado: panel angosto, solo boton visible */
+.ec-panel-filtros.ec-collapsed { width: 48px !important; min-width: 48px !important; }
+.ec-panel-filtros.ec-collapsed .ec-panel-filtros-header { padding: 10px; justify-content: center; }
+.ec-panel-filtros.ec-collapsed .ec-panel-filtros-title { display: none; }
+
+/* Movil: panel mas angosto, colapsado muestra solo boton para maximizar mapa */
+@media (max-width: 480px) {
+  #panel_filtros { width: 260px !important; left: 10px !important; }
+  .ec-panel-filtros.ec-collapsed { width: 56px !important; min-width: 56px !important; }
+  .ec-panel-filtros.ec-collapsed .ec-panel-filtros-header { padding: 8px; justify-content: center; }
+  .ec-panel-filtros.ec-collapsed .ec-panel-filtros-title { display: none; }
+}
+

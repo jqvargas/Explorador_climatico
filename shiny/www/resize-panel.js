@@ -1,9 +1,9 @@
-﻿document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
   setTimeout(function() {
     var panel = document.getElementById('panel_datos');
     var handle = document.querySelector('.ec-panel-resize-handle');
     if (!panel || !handle) return;
-    var minH = 280, maxH = Math.floor(window.innerHeight * 0.85);
+    var minH = 220, maxH = Math.floor(window.innerHeight * 0.85);
     var resizing = false, startY = 0, startH = 0;
     handle.addEventListener('mousedown', function(e) {
       e.preventDefault();
@@ -31,3 +31,4 @@
     });
   }, 500);
 });
+

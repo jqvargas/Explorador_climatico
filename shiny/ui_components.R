@@ -4,8 +4,11 @@
 
 ec_filter_block <- function(select_id, label, choices, button_id, selected = NULL) {
   div(class = "ec-filter-block",
-    shiny::selectInput(select_id, label, choices = choices, selected = selected),
-    shiny::actionButton(button_id, "Aplicar", class = "ec-btn-apply")
+    shiny::tags$label(label, class = "ec-filter-label"),
+    div(class = "ec-filter-row",
+      div(class = "ec-filter-select", shiny::selectInput(select_id, NULL, choices = choices, selected = selected)),
+      shiny::actionButton(button_id, "", icon = shiny::icon("check"), class = "ec-btn-apply", title = "Aplicar")
+    )
   )
 }
 
@@ -35,7 +38,7 @@ ec_dashboard_layout <- function(title = APP_TITLE) {
         shiny::tags$head(
           shiny::tags$link(rel = "stylesheet", type = "text/css", href = "themes/rodaja.css"),
           shiny::tags$link(rel = "stylesheet", href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css", crossorigin = "anonymous"),
-          shiny::tags$script(src = "resize-panel.js")
+          shiny::tags$script(src = "resize-panel.js"), shiny::tags$script(src = "panel-filtros-toggle.js")
         ),
 
         leaflet::leafletOutput("mapa-mapa", width = "100%", height = "100%"),
@@ -45,11 +48,34 @@ ec_dashboard_layout <- function(title = APP_TITLE) {
           fixed = TRUE, draggable = TRUE,
           top = 55, left = 20,
           width = 280,
-          style = "background:rgba(255,255,255,0.95);padding:16px;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);overflow-y:auto;max-height:calc(100vh - 70px);",
-          ec_sidebar_filters()
+          class = "ec-panel-filtros",
+          style = "background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 16px; border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 8px 32px rgba(0,0,0,0.12); padding: 0; overflow: visible; max-height: calc(100vh - 70px);",
+          shiny::div(class = "ec-panel-filtros-header",
+            shiny::span("Filtros", class = "ec-panel-filtros-title"),
+            shiny::actionButton("toggle_filtros", NULL, icon = shiny::icon("angle-double-left"), class = "ec-btn-toggle-filtros", title = "Minimizar")
+          ),
+          shiny::div(class = "ec-panel-filtros-body",
+            ec_sidebar_filters()
+          )
         ),
 
         shiny::tags$script(HTML("
+          Shiny.addCustomMessageHandler('panel_filtros_toggle', function(_) {
+            var p = document.getElementById('panel_filtros');
+            if (!p) return;
+            p.classList.toggle('ec-collapsed');
+            var btn = document.querySelector('#toggle_filtros');
+            if (btn) {
+              var icon = btn.querySelector('i');
+              if (p.classList.contains('ec-collapsed')) {
+                btn.title = 'Expandir';
+                if (icon) icon.className = 'fa fa-angle-double-right';
+              } else {
+                btn.title = 'Minimizar';
+                if (icon) icon.className = 'fa fa-angle-double-left';
+              }
+            }
+          });
           Shiny.addCustomMessageHandler('panel_datos_state', function(val) {
             var p = document.getElementById('panel_datos_wrapper');
             if (!p) return;
@@ -72,10 +98,9 @@ ec_dashboard_layout <- function(title = APP_TITLE) {
             left = 0, right = 0, bottom = 0, top = "auto",
             width = "100%", height = "auto",
             class = "ec-panel-datos-inner",
-            style = "background:rgba(255,255,255,0.95);padding:0;border-radius:8px 8px 0 0;box-shadow:0 -2px 12px rgba(0,0,0,0.08);overflow:visible;display:flex;flex-direction:column;min-height:280px;max-height:85vh;height:400px;",
-            shiny::div(class = "ec-panel-resize-handle", title = "Arrastra para cambiar tamano"),
-            shiny::div(class = "ec-panel-datos-header",
-              shiny::h5("Serie temporal", style = "font-weight:600;margin:0;color:#394553;flex:1;"),
+            style = "background:rgba(255,255,255,0.95);padding:0;border-radius:8px 8px 0 0;box-shadow:0 -2px 12px rgba(0,0,0,0.08);overflow:visible;display:flex;flex-direction:column;min-height:220px;max-height:85vh;height:320px;",
+            shiny::div(class = "ec-panel-top-bar",
+              shiny::div(class = "ec-panel-resize-handle", title = "Arrastra para cambiar tamano"),
               shiny::div(class = "ec-panel-datos-btns",
                 shiny::actionButton("panel_minimize", NULL, class = "ec-panel-btn ec-panel-btn-minimize", title = "Minimizar"),
                 shiny::actionButton("panel_maximize", NULL, class = "ec-panel-btn ec-panel-btn-maximize", title = "Maximizar"),
@@ -83,7 +108,7 @@ ec_dashboard_layout <- function(title = APP_TITLE) {
               )
             ),
             shiny::div(class = "ec-panel-datos-body",
-              style = "padding:16px;overflow:visible;flex:1 1 auto;",
+              style = "padding:8px;overflow:visible;flex:1 1 auto;min-height:0;",
               grafico_ui("grafico")
             )
           )
@@ -102,3 +127,4 @@ ec_dashboard_layout <- function(title = APP_TITLE) {
         shiny::p("Plataforma de visualizacion y descarga de datos climaticos de Chile."))))
   )
 }
+

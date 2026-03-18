@@ -33,7 +33,7 @@ descarga_server <- function(id, variable_id, estacion_id, periodo_seleccionado) 
       }
       body <- list(estacion_ids = as.list(e), variable_ids = as.list(v), fecha_inicio = format(f[1], "%Y-%m-%d"), fecha_fin = format(f[2], "%Y-%m-%d"), email = input$email %||% "", formato = "csv")
       url <- paste0(api_url(), "/solicitar-descarga")
-      resp <- tryCatch(httr::POST(url, body = body, encode = "json", httr::content_type_json(), httr::timeout(10)), error = function(e) NULL)
+      resp <- tryCatch(httr::POST(url, body = body, api_headers(), encode = "json", httr::content_type_json(), httr::timeout(10)), error = function(e) NULL)
       if (is.null(resp) || httr::status_code(resp) != 200) {
         msg <- "Error al solicitar descarga."
         if (!is.null(resp)) { cnt <- httr::content(resp, as = "parsed"); if (is.list(cnt) && !is.null(cnt$error)) msg <- cnt$error }
@@ -49,7 +49,7 @@ descarga_server <- function(id, variable_id, estacion_id, periodo_seleccionado) 
     poll_estado <- function(estado_url, output, session) {
       show <- function(html) output$estado <- shiny::renderUI(html)
       check <- function() {
-        r <- tryCatch(httr::content(httr::GET(estado_url, httr::timeout(5)), as = "parsed"), error = function(e) NULL)
+        r <- tryCatch(httr::content(httr::GET(estado_url, api_headers(), httr::timeout(5)), as = "parsed"), error = function(e) NULL)
         if (is.null(r)) list(estado = "error") else r
       }
       done <- shiny::reactiveVal(FALSE)
@@ -73,4 +73,6 @@ descarga_server <- function(id, variable_id, estacion_id, periodo_seleccionado) 
     }
   })
 }
+
+
 

@@ -10,6 +10,11 @@ api_url <- function() sub("/$", "", Sys.getenv("API_URL", "http://api:8000"))
 API_TIMEOUT_DEFAULT <- 10
 API_TIMEOUT_ESTACIONES <- 20
 API_TIMEOUT_DATOS <- 45
+api_headers <- function() {
+  key <- Sys.getenv("API_KEY", "")
+  if (nchar(key) > 0) httr::add_headers(`X-API-Key` = key) else httr::add_headers()
+}
+
 api_get <- function(path, params = NULL, timeout = API_TIMEOUT_DEFAULT) {
   url <- paste0(api_url(), path)
   if (!is.null(params) && length(params) > 0) {
@@ -17,7 +22,7 @@ api_get <- function(path, params = NULL, timeout = API_TIMEOUT_DEFAULT) {
     url <- paste0(url, if (grepl("?", url, fixed = TRUE)) "&" else "?", q)
   }
   resp <- tryCatch(
-    httr::GET(url, httr::timeout(timeout)),
+    httr::GET(url, api_headers(), httr::timeout(timeout)),
     error = function(e) NULL
   )
   if (is.null(resp) || httr::status_code(resp) != 200) return(NULL)
