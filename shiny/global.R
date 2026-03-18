@@ -5,15 +5,21 @@ library(shinyWidgets)
 library(shinythemes)
 
 source("config.R", local = FALSE)
-# API helpers (inline)
+# API helpers (inline) - timeouts evitan que queries en cola bloqueen la app
 api_url <- function() sub("/$", "", Sys.getenv("API_URL", "http://api:8000"))
-api_get <- function(path, params = NULL, timeout = 15) {
+API_TIMEOUT_DEFAULT <- 10
+API_TIMEOUT_ESTACIONES <- 20
+API_TIMEOUT_DATOS <- 45
+api_get <- function(path, params = NULL, timeout = API_TIMEOUT_DEFAULT) {
   url <- paste0(api_url(), path)
   if (!is.null(params) && length(params) > 0) {
     q <- paste(names(params), params, sep = "=", collapse = "&")
     url <- paste0(url, if (grepl("?", url, fixed = TRUE)) "&" else "?", q)
   }
-  resp <- tryCatch(httr::GET(url, httr::timeout(timeout)), error = function(e) NULL)
+  resp <- tryCatch(
+    httr::GET(url, httr::timeout(timeout)),
+    error = function(e) NULL
+  )
   if (is.null(resp) || httr::status_code(resp) != 200) return(NULL)
   tryCatch(httr::content(resp, as = "parsed", type = "application/json"), error = function(e) NULL)
 }

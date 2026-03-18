@@ -32,7 +32,10 @@ ec_dashboard_layout <- function(title = APP_TITLE) {
 
     shiny::tabPanel("Explorador",
       shiny::div(class = "outer",
-        shiny::tags$head(shiny::tags$link(rel = "stylesheet", type = "text/css", href = "themes/rodaja.css")),
+        shiny::tags$head(
+          shiny::tags$link(rel = "stylesheet", type = "text/css", href = "themes/rodaja.css"),
+          shiny::tags$link(rel = "stylesheet", href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css", crossorigin = "anonymous")
+        ),
 
         leaflet::leafletOutput("mapa-mapa", width = "100%", height = "100%"),
 
@@ -45,20 +48,43 @@ ec_dashboard_layout <- function(title = APP_TITLE) {
           ec_sidebar_filters()
         ),
 
-        shiny::absolutePanel(
-          id = "panel_datos",
-          fixed = TRUE, draggable = TRUE,
-          top = 55, right = 0,
-          left = "auto", bottom = "auto",
-          width = "30%", height = "auto",
-          style = "background:rgba(255,255,255,0.95);padding:16px;border-radius:8px 0 0 8px;box-shadow:-2px 0 12px rgba(0,0,0,0.08);overflow-y:auto;max-height:calc(100vh - 60px);",
-          shiny::h5("Serie temporal", style = "font-weight:600;margin-top:0;color:#394553;"),
-          grafico_ui("grafico"),
-          shiny::tags$hr(style = "border-color:#e0e0e0;margin:12px 0;"),
-          shiny::h5("Datos", style = "font-weight:600;color:#394553;"),
-          tabla_ui("tabla"),
-          shiny::tags$hr(style = "border-color:#e0e0e0;margin:12px 0;"),
-          descarga_ui("descarga")
+        shiny::tags$script(HTML("
+          Shiny.addCustomMessageHandler('panel_datos_state', function(val) {
+            var p = document.getElementById('panel_datos_wrapper');
+            if (!p) return;
+            p.setAttribute('data-state', val);
+            p.classList.remove('ec-panel-closed','ec-panel-minimized','ec-panel-maximized');
+            if (val === 0) p.classList.add('ec-panel-closed');
+            else if (val === 2) p.classList.add('ec-panel-minimized');
+            else if (val === 3) p.classList.add('ec-panel-maximized');
+            if (typeof Shiny !== 'undefined' && Shiny.setInputValue) Shiny.setInputValue('panel_datos_state', val, {priority: 'event'});
+          });
+        ")),
+        shiny::div(style = "display:none;", shiny::numericInput("panel_datos_state", NULL, value = 0, min = 0, max = 3, step = 1)),
+        shiny::div(
+          id = "panel_datos_wrapper",
+          class = "ec-panel-datos ec-panel-closed",
+          "data-state" = "0",
+          shiny::absolutePanel(
+            id = "panel_datos",
+            fixed = TRUE, draggable = TRUE,
+            left = 0, right = 0, bottom = 0, top = "auto",
+            width = "100%", height = "400px",
+            class = "ec-panel-datos-inner",
+            style = "background:rgba(255,255,255,0.95);padding:0;border-radius:8px 8px 0 0;box-shadow:0 -2px 12px rgba(0,0,0,0.08);overflow:hidden;display:flex;flex-direction:column;",
+            shiny::div(class = "ec-panel-datos-header",
+              shiny::h5("Serie temporal", style = "font-weight:600;margin:0;color:#394553;flex:1;"),
+              shiny::div(class = "ec-panel-datos-btns",
+                shiny::actionButton("panel_minimize", NULL, class = "ec-panel-btn ec-panel-btn-minimize", title = "Minimizar"),
+                shiny::actionButton("panel_maximize", NULL, class = "ec-panel-btn ec-panel-btn-maximize", title = "Maximizar"),
+                shiny::actionButton("panel_close", NULL, class = "ec-panel-btn ec-panel-btn-close", title = "Cerrar")
+              )
+            ),
+            shiny::div(class = "ec-panel-datos-body",
+              style = "padding:16px;overflow:auto;flex:1;min-height:0;",
+              grafico_ui("grafico")
+            )
+          )
         ),
 
         shiny::tags$div(id = "cite",

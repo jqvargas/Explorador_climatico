@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 * { font-family: 'Inter', sans-serif !important; }
+.fa, .glyphicon, [class^="fa-"], [class*=" fa-"] { font-family: "FontAwesome", "Glyphicons Halflings", sans-serif !important; }
 
 /* Mapa fullscreen */
 div.outer {
@@ -77,8 +78,46 @@ div.outer {
 }
 .btn-primary:hover { background: #c4821e !important; }
 
+/* Panel Serie temporal - horizontal en parte inferior, cerrar/minimizar/maximizar */
+.ec-panel-datos { transition: all 0.25s ease; }
+.ec-panel-datos.ec-panel-closed #panel_datos { transform: translateY(100%); opacity: 0; pointer-events: none; }
+.ec-panel-datos.ec-panel-minimized .ec-panel-datos-body { display: none !important; }
+.ec-panel-datos.ec-panel-minimized #panel_datos { height: 48px !important; min-height: 48px !important; }
+.ec-panel-datos.ec-panel-minimized .ec-panel-datos-header { padding: 8px 16px; }
+.ec-panel-datos.ec-panel-minimized .ec-panel-datos-header h5 { display: none; }
+.ec-panel-datos.ec-panel-minimized .ec-panel-datos-btns { flex-direction: row; gap: 4px; }
+.ec-panel-datos.ec-panel-minimized .ec-panel-btn { width: 36px !important; height: 36px !important; }
+.ec-panel-datos.ec-panel-maximized #panel_datos { height: 70vh !important; }
+.ec-panel-datos-header { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: #f8f9fa; border-bottom: 1px solid #e0e0e0; }
+.ec-panel-datos-btns { display: flex; gap: 4px; }
+.ec-panel-btn { background: #e9ecef !important; border: none !important; color: #394553 !important; width: 32px; height: 32px; padding: 0; border-radius: 6px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; }
+.ec-panel-btn:hover { background: #DF9531 !important; color: #fff !important; }
+.ec-panel-btn-close:hover { background: #dc3545 !important; color: #fff !important; }
+.ec-panel-btn .glyphicon { font-family: "Glyphicons Halflings" !important; font-size: 14px; }
+.ec-panel-btn .fa, .ec-panel-btn i { font-family: "FontAwesome" !important; font-size: 14px; }
+.ec-panel-btn .ec-panel-icon { font-size: 18px; line-height: 1; font-weight: 600; display: inline-block; }
+/* Iconos vía CSS (independientes de fuentes) */
+.ec-panel-btn-minimize::before { font-family: "Segoe UI Symbol", "Arial Unicode MS", sans-serif; content: "\2212"; font-size: 18px; font-weight: 600; display: inline-block; line-height: 1; }
+.ec-panel-btn-maximize::before { font-family: "Segoe UI Symbol", "Arial Unicode MS", sans-serif; content: "\25A1"; font-size: 18px; font-weight: 600; display: inline-block; line-height: 1; }
+.ec-panel-btn-close::before { font-family: "Segoe UI Symbol", "Arial Unicode MS", sans-serif; content: "\00D7"; font-size: 20px; font-weight: 600; display: inline-block; line-height: 1; }
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: #F7F9FA; }
 ::-webkit-scrollbar-thumb { background: #CACEB8; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #DF9531; }
+/* Ocultar input estado del panel */ #panel_datos_state, .form-group.shiny-input-container input#panel_datos_state { position: absolute !important; left: -9999px !important; }
+
+.ec-panel-btn { display: inline-flex !important; align-items: center !important; justify-content: center !important; }
+
+/* Barra rango de fechas - serie temporal */
+.ec-rango-fechas { margin-bottom: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0; }
+.ec-rango-fechas-barra { margin-bottom: 12px; }
+.ec-rango-fechas-barra .irs--flat .irs-bar { background: #DF9531; }
+.ec-rango-fechas-barra .irs--flat .irs-handle { border-color: #DF9531; background: #DF9531; }
+.ec-rango-fechas-inputs { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.ec-rango-input-group { display: flex; flex-direction: column; gap: 4px; }
+.ec-rango-input-group label { font-size: 11px; color: #8C9091; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+.ec-rango-apply { margin-left: auto; }
+.ec-rango-fechas-inputs .form-group { margin-bottom: 0; }
+

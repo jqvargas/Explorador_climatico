@@ -18,7 +18,7 @@ server <- function(input, output, session) {
   })
 
   variables <- shiny::reactive({
-    dat <- api_get("/variables")
+    dat <- api_get("/variables", timeout = API_TIMEOUT_DEFAULT)
     if (is.null(dat)) return(data.frame(id = integer(), nombre = character()))
     if (is.data.frame(dat)) return(dat[, c("id", "nombre"), drop = FALSE])
     rows <- lapply(dat, function(x) data.frame(id = as.integer(x$id %||% NA), nombre = as.character(x$nombre %||% x$nombre_abr %||% ""), stringsAsFactors = FALSE))
@@ -29,7 +29,7 @@ server <- function(input, output, session) {
   })
 
   fuentes <- shiny::reactive({
-    dat <- api_get("/fuentes")
+    dat <- api_get("/fuentes", timeout = API_TIMEOUT_DEFAULT)
     if (is.null(dat)) return(data.frame(id = integer(), nombre = character()))
     if (is.data.frame(dat)) return(dat[, c("id", "nombre"), drop = FALSE])
     rows <- lapply(dat, function(x) data.frame(id = as.integer(x$id %||% NA), nombre = as.character(x$nombre %||% ""), stringsAsFactors = FALSE))
@@ -45,7 +45,7 @@ server <- function(input, output, session) {
     if (!is.null(var) && var != "") params$id_variable <- as.integer(var)
     dat <- shiny::withProgress(message = "Cargando estaciones...", value = 0, {
       shiny::setProgress(value = 0.3, message = "Consultando API...")
-      api_get("/estaciones", params, timeout = 30)
+      api_get("/estaciones", params, timeout = API_TIMEOUT_ESTACIONES)
     })
     if (is.null(dat)) return(data.frame(id = integer(), nombre = character(), lat = numeric(), lon = numeric(), macrozona = character()))
     if (is.data.frame(dat)) {
@@ -66,9 +66,9 @@ server <- function(input, output, session) {
     vid <- variable_id()
     if (is.null(eid) || is.null(vid)) return(list(df = data.frame(), error = "Selecciona estacion y variable primero."))
     dat <- shiny::withProgress(message = "Cargando serie temporal...", value = 0.3, {
-      api_get("/datos", list(estacion_id = eid, variable_id = vid), timeout = 60)
+      api_get("/datos", list(estacion_id = eid, variable_id = vid), timeout = API_TIMEOUT_DATOS)
     })
-    if (is.null(dat)) return(list(df = data.frame(), error = "Error de conexion"))
+    if (is.null(dat)) return(list(df = data.frame(), error = "Error de conexion o timeout. La API puede estar ocupada. Intenta de nuevo en unos segundos."))
     if (is.list(dat) && !is.null(dat$error)) return(list(df = data.frame(), error = paste(dat$error, collapse = " ")))
     if (length(dat) == 0) return(list(df = data.frame(), error = NULL))
     if (is.data.frame(dat)) return(list(df = dat, error = NULL))
@@ -83,7 +83,17 @@ server <- function(input, output, session) {
     estacion_id(if (nzchar(e)) as.integer(e) else NULL)
   })
 
-  shiny::observeEvent(input$ver_datos, { ver_datos_click(ver_datos_click() + 1) })
+  shiny::observeEvent(input$ver_datos, {
+    ver_datos_click(ver_datos_click() + 1)
+    session$sendCustomMessage("panel_datos_state", 1)
+  })
+  shiny::observeEvent(input$panel_close, { session$sendCustomMessage("panel_datos_state", 0) })
+  shiny::observeEvent(input$panel_minimize, { session$sendCustomMessage("panel_datos_state", 2) })
+  shiny::observeEvent(input$panel_maximize, {
+    s <- input$panel_datos_state
+    next_val <- if (is.null(s) || s == 2 || s == 3) 1L else 3L
+    session$sendCustomMessage("panel_datos_state", next_val)
+  })
 
   shiny::observe({
     v <- variables()
@@ -121,8 +131,6 @@ server <- function(input, output, session) {
 
   mapa_server("mapa", estaciones, estacion_id)
   grafico_server("grafico", estacion_id_ver, variable_id, ver_datos_click, datos, periodo_seleccionado)
-  tabla_server("tabla", datos, ver_datos_click)
-  descarga_server("descarga", variable_id, estacion_id_ver, periodo_seleccionado)
 }
 
 
