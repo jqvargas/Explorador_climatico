@@ -83,14 +83,15 @@ div.outer {
   pointer-events: auto;
 }
 
-/* Drawer panel */
+/* Drawer panel - ancho y alto generosos para que el dropdown de estaciones tenga espacio */
 .ec-drawer {
   pointer-events: none;
   position: fixed;
   top: 222px;
   left: 0;
-  width: 280px;
-  max-width: 85vw;
+  width: 380px;
+  min-height: 55vh;
+  max-width: 90vw;
   z-index: 1201;
   background: transparent;
   display: flex;
@@ -129,7 +130,7 @@ div.outer {
 }
 .ec-drawer-body {
   padding: 12px 16px;
-  overflow-y: auto;
+  overflow: visible;
   flex: 1;
 }
 
@@ -173,7 +174,7 @@ div.outer {
 .ec-filter-block { margin-bottom: 8px; }
 .ec-filter-block:last-child { margin-bottom: 0; }
 .ec-filter-row { display: flex; gap: 6px; align-items: center; }
-.ec-filter-select { flex: 1; min-width: 0; max-width: 200px; }
+.ec-filter-select { flex: 1; min-width: 0; max-width: 100%; }
 .ec-filter-select .form-group, .ec-filter-select .selectize-control { margin: 0; }
 .ec-btn-apply {
   flex-shrink: 0;
@@ -204,8 +205,11 @@ div.outer {
 }
 .btn-primary:hover { background: #c4821e !important; }
 
-/* Selectize dropdown sobre drawer */
-.selectize-dropdown { z-index: 1300 !important; }
+/* Selectize dropdown - z-index para que quede sobre el drawer */
+.selectize-dropdown {
+  z-index: 9999 !important;
+  min-width: 260px !important;
+}
 
 /* Panel Serie temporal */
 .ec-panel-datos { transition: all 0.25s ease; }

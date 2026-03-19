@@ -46,7 +46,7 @@ header <- c(
   '`%||%` <- function(x, y) if (is.null(x) || is.na(x)) y else x',
   ""
 )
-endpoint_files <- c("fuentes.R", "estaciones.R", "variables.R", "datos.R", "descargas.R")
+endpoint_files <- c("ping.R", "fuentes.R", "estaciones.R", "variables.R", "datos.R", "descargas.R")
 combined <- c(header, unlist(lapply(endpoint_files, function(f) {
   readLines(file.path(base, "endpoints", f), warn = FALSE)
 })))

@@ -21,28 +21,27 @@ grafico_server <- function(id, estacion_id, variable_id, ver_datos_click, datos,
       df <- res$df
       df_plot <- df[!is.na(df$valor), ]
       if (nrow(df_plot) == 0) return(NULL)
+
       min_d <- min(df$fecha)
       max_d <- max(df$fecha)
-      default_start <- max(min_d, as.Date("2024-01-01"))
-      default_end <- min(max_d, as.Date("2025-12-31"))
-      if (default_start > default_end) {
-        default_start <- min_d
-        default_end <- max_d
-      }
+
+      # Ultimos 2 meses por default
+      default_start <- max(min_d, max_d - 60)
+      default_end   <- max_d
+
       rango_aplicado(c(default_start, default_end))
-      shiny::div(class = "ec-rango-fechas",
-        shiny::dateRangeInput(
+
+      shiny::div(
+        class = "ec-rango-fechas",
+        style = "padding: 8px 16px;",
+        shiny::sliderInput(
           ns("rango_fechas"),
           label = NULL,
-          start = default_start,
-          end = default_end,
-          min = min_d,
-          max = max_d,
-          separator = " a ",
-          format = "yyyy-mm-dd",
-          startview = "decade",
-          language = "es",
-          width = "100%"
+          min   = min_d,
+          max   = max_d,
+          value = c(default_start, default_end),
+          width = "100%",
+          ticks = FALSE
         )
       )
     })
@@ -50,7 +49,8 @@ grafico_server <- function(id, estacion_id, variable_id, ver_datos_click, datos,
     shiny::observeEvent(input$rango_fechas, {
       rng <- input$rango_fechas
       if (is.null(rng) || length(rng) < 2) return()
-      fi <- as.Date(rng[1]); ff <- as.Date(rng[2])
+      fi <- as.Date(rng[1], origin = "1970-01-01")
+      ff <- as.Date(rng[2], origin = "1970-01-01")
       if (!is.null(fi) && !is.null(ff) && fi <= ff) {
         rango_aplicado(c(fi, ff))
         periodo_seleccionado(c(fi, ff))
@@ -90,7 +90,7 @@ grafico_server <- function(id, estacion_id, variable_id, ver_datos_click, datos,
       dias <- as.numeric(difftime(max(df$fecha), min(df$fecha), units = "days")) + 1
       cobertura <- round(100 * n_valid / max(dias, 1), 1)
       rango <- rango_aplicado()
-      xaxis_cfg <- list(title = "Fecha", rangeslider = list(visible = FALSE))
+      xaxis_cfg <- list(title = "Fecha", rangeslider = list(visible = FALSE), fixedrange = TRUE)
       if (!is.null(rango) && length(rango) == 2) {
         xaxis_cfg$range <- c(rango[1], rango[2])
       }
@@ -100,11 +100,13 @@ grafico_server <- function(id, estacion_id, variable_id, ver_datos_click, datos,
         plotly::layout(
           title = paste0("Serie de tiempo de ", nombre_est, ", completitud: ", cobertura, "%"),
           xaxis = xaxis_cfg,
-          yaxis = list(title = df$unidad[1] %||% "Valor")
+          yaxis = list(title = df$unidad[1] %||% "Valor", fixedrange = TRUE),
+          dragmode = FALSE
         )
-      p |> plotly::config(displayModeBar = FALSE)
+      p |> plotly::config(displayModeBar = FALSE, scrollZoom = FALSE, doubleClick = FALSE)
     })
   })
 }
+
 
 

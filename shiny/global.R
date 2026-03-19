@@ -15,18 +15,27 @@ api_headers <- function() {
   if (nchar(key) > 0) httr::add_headers(`X-API-Key` = key) else httr::add_headers()
 }
 
-api_get <- function(path, params = NULL, timeout = API_TIMEOUT_DEFAULT) {
+api_get <- function(path, params = NULL, timeout = API_TIMEOUT_DEFAULT,
+                    reintentos = 2, pausa = 1.5) {
   url <- paste0(api_url(), path)
   if (!is.null(params) && length(params) > 0) {
     q <- paste(names(params), params, sep = "=", collapse = "&")
     url <- paste0(url, if (grepl("?", url, fixed = TRUE)) "&" else "?", q)
   }
-  resp <- tryCatch(
-    httr::GET(url, api_headers(), httr::timeout(timeout)),
-    error = function(e) NULL
-  )
-  if (is.null(resp) || httr::status_code(resp) != 200) return(NULL)
-  tryCatch(httr::content(resp, as = "parsed", type = "application/json"), error = function(e) NULL)
+  for (intento in seq_len(reintentos + 1)) {
+    resp <- tryCatch(
+      httr::GET(url, api_headers(), httr::timeout(timeout)),
+      error = function(e) NULL
+    )
+    if (!is.null(resp) && httr::status_code(resp) == 200) {
+      return(tryCatch(
+        httr::content(resp, as = "parsed", type = "application/json"),
+        error = function(e) NULL
+      ))
+    }
+    if (intento <= reintentos) Sys.sleep(pausa)
+  }
+  return(NULL)
 }
 # Modulos (funcionalidad)
 source("modules/mapa.R", local = FALSE)

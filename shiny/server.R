@@ -104,7 +104,7 @@ server <- function(input, output, session) {
   shiny::observe({
     v <- variables()
     if (nrow(v) > 0) {
-      ch <- c("— Variable —" = "", setNames(as.character(v$id), v$nombre))
+      ch <- c("Variable" = "", setNames(as.character(v$id), v$nombre))
       curr <- input$variable
       sel <- if (!is.null(curr) && nzchar(curr) && curr %in% as.character(v$id)) curr else ""
       shiny::updateSelectInput(session, "variable", choices = ch, selected = sel)
@@ -114,14 +114,14 @@ server <- function(input, output, session) {
   shiny::observe({
     f <- fuentes()
     if (nrow(f) > 0) {
-      ch <- c("— Operador —" = "0", setNames(as.character(f$id), f$nombre))
+      ch <- c("Operador" = "0", setNames(as.character(f$id), f$nombre))
       shiny::updateSelectInput(session, "operador", choices = ch, selected = "0")
     }
   })
 
   shiny::observe({
     e <- estaciones()
-    ch <- c("— Estación —" = "")
+    ch <- c("Estacion" = "")
     if (nrow(e) > 0) ch <- c(ch, setNames(as.character(e$id), e$nombre))
     curr <- input$estacion
     eid <- estacion_id()
@@ -133,7 +133,28 @@ server <- function(input, output, session) {
   output$datos_listos <- shiny::renderText({
     if (ver_datos_click() > 0) "1" else "0"
   })
+  output$contador_estaciones <- shiny::renderText({
+    e <- estaciones()
+    eid <- estacion_id()
+    if (!is.null(eid) && length(eid) > 0) {
+      "1 estacion seleccionada"
+    } else if (nrow(e) > 0) {
+      paste0(nrow(e), " estaciones visibles")
+    } else {
+      "Cargando estaciones..."
+    }
+  })
+  shiny::observe({
+    session$sendCustomMessage("set_btn_estado", list(id = "aplicar_operador", activo = operador_aplicado() != "0"))
+  })
+  shiny::observe({
+    session$sendCustomMessage("set_btn_estado", list(id = "aplicar_variable", activo = variable_aplicada() != ""))
+  })
+  shiny::observe({
+    session$sendCustomMessage("set_btn_estado", list(id = "aplicar_estacion", activo = !is.null(estacion_id()) && length(estacion_id()) > 0))
+  })
   shiny::outputOptions(output, "datos_listos", suspendWhenHidden = FALSE)
+  shiny::outputOptions(output, "contador_estaciones", suspendWhenHidden = FALSE)
 
   mapa_server("mapa", estaciones, estacion_id)
   grafico_server("grafico", estacion_id_ver, variable_id, ver_datos_click, datos, periodo_seleccionado)

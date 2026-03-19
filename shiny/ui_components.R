@@ -14,7 +14,8 @@ ec_filter_block <- function(select_id, placeholder, choices, button_id, selected
             searchField = "label",
             allowEmptyOption = TRUE,
             selectOnTab = TRUE,
-            openOnFocus = TRUE
+            openOnFocus = TRUE,
+            dropdownParent = "body"
           ))
       ),
       shiny::actionButton(button_id, "", icon = shiny::icon("check"),
@@ -25,9 +26,10 @@ ec_filter_block <- function(select_id, placeholder, choices, button_id, selected
 
 ec_sidebar_filters <- function() {
   div(class = "ec-sidebar-filters",
-    ec_filter_block("operador", NULL, c("— Operador —" = "0"), "aplicar_operador", selected = "0"),
-    ec_filter_block("variable", NULL, c("— Variable —" = ""), "aplicar_variable", selected = ""),
-    ec_filter_block("estacion", NULL, c("— Estación —" = ""), "aplicar_estacion", selected = ""),
+    ec_filter_block("operador", NULL, c("Operador" = "0"), "aplicar_operador", selected = "0"),
+    ec_filter_block("variable", NULL, c("Variable" = ""), "aplicar_variable", selected = ""),
+    ec_filter_block("estacion", NULL, c("Estacion" = ""), "aplicar_estacion", selected = ""),
+    shiny::div(class = "ec-contador-estaciones", shiny::textOutput("contador_estaciones")),
     div(class = "ec-filter-block",
       shiny::actionButton("ver_datos", "Ver datos", icon = shiny::icon("play"), class = "btn-primary ec-btn-ver-datos")
     )
@@ -111,45 +113,65 @@ ec_dashboard_layout <- function(title = APP_TITLE) {
           ec_sidebar_filters()
         )
       ),
-      shiny::tags$script(HTML('
+      shiny::tags$script(HTML("
         (function(){
+          var btnEstados = { aplicar_operador: false, aplicar_variable: false, aplicar_estacion: false };
+          function aplicarEstados() {
+            Object.keys(btnEstados).forEach(function(id) {
+              var btn = document.getElementById(id);
+              if (!btn) return;
+              if (btnEstados[id]) { btn.classList.add('ec-btn-activo'); }
+              else { btn.classList.remove('ec-btn-activo'); }
+            });
+          }
           function toggle(){
-            document.getElementById("ec_drawer_filtros").classList.toggle("ec-drawer-open");
-            document.getElementById("ec_drawer_overlay").classList.toggle("ec-drawer-open");
+            document.getElementById('ec_drawer_filtros').classList.toggle('ec-drawer-open');
+            document.getElementById('ec_drawer_overlay').classList.toggle('ec-drawer-open');
+            setTimeout(aplicarEstados, 50);
           }
           function close(){
-            document.getElementById("ec_drawer_filtros").classList.remove("ec-drawer-open");
-            document.getElementById("ec_drawer_overlay").classList.remove("ec-drawer-open");
+            document.getElementById('ec_drawer_filtros').classList.remove('ec-drawer-open');
+            document.getElementById('ec_drawer_overlay').classList.remove('ec-drawer-open');
           }
           function attach(){
-            var btn=document.getElementById("ec_btn_filtros");
-            var cls=document.getElementById("ec_drawer_close");
-            var ovr=document.getElementById("ec_drawer_overlay");
-            if(btn){
-              btn.onclick=toggle;
-              btn.addEventListener("touchstart",function(e){e.preventDefault();toggle();},{passive:false});
+            var btn = document.getElementById('ec_btn_filtros');
+            var ovr = document.getElementById('ec_drawer_overlay');
+            if (btn) {
+              btn.onclick = toggle;
+              btn.addEventListener('touchstart', function(e){ e.preventDefault(); toggle(); }, {passive: false});
             }
-            if(cls) cls.onclick=close;
-            if(ovr) ovr.onclick=close;
-            var verDatos = document.getElementById("ver_datos");
-            if(verDatos){
-              verDatos.addEventListener("click", function(){
-                setTimeout(close, 300);
-              });
-              verDatos.addEventListener("touchend", function(){
-                setTimeout(close, 300);
-              }, {passive: true});
+            if (ovr) ovr.onclick = close;
+            var verDatos = document.getElementById('ver_datos');
+            if (verDatos) {
+              verDatos.addEventListener('click', function(){ setTimeout(close, 300); });
+              verDatos.addEventListener('touchend', function(){ setTimeout(close, 300); }, {passive: true});
             }
           }
+          document.addEventListener('DOMContentLoaded', function() {
+            if (window.Shiny) {
+              Shiny.addCustomMessageHandler('set_btn_estado', function(msg) {
+                btnEstados[msg.id] = msg.activo;
+                aplicarEstados();
+              });
+              Shiny.addCustomMessageHandler('drawer_close', function(_){ close(); });
+            }
+          });
+          document.addEventListener('shiny:connected', function(){
+            attach();
+            Shiny.addCustomMessageHandler('set_btn_estado', function(msg) {
+              btnEstados[msg.id] = msg.activo;
+              aplicarEstados();
+            });
+            Shiny.addCustomMessageHandler('drawer_close', function(_){ close(); });
+          });
+          document.addEventListener('shiny:value', function() {
+            setTimeout(aplicarEstados, 100);
+          });
           attach();
           setTimeout(attach, 500);
           setTimeout(attach, 2000);
-          document.addEventListener("shiny:connected",function(){
-            attach();
-            Shiny.addCustomMessageHandler("drawer_close",function(_){close();});
-          });
         })();
-      ')),
+      ")),
       shiny::tags$style(HTML('
   #ec_drawer_filtros,
   #ec_drawer_filtros .ec-drawer-header,
@@ -267,6 +289,45 @@ ec_dashboard_layout <- function(title = APP_TITLE) {
   #ec_drawer_filtros .selectize-dropdown .option.active {
     background-color: #DF9531 !important;
     color: #fff !important;
+  }
+  /* body > .selectize-dropdown: dropdown con dropdownParent="body" */
+  body > .selectize-dropdown {
+    max-height: 400px !important;
+    overflow-y: auto !important;
+    z-index: 9999 !important;
+    background: #1e232a !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    border-radius: 6px !important;
+  }
+  body > .selectize-dropdown .option {
+    color: #F7F9FA !important;
+    background: #1e232a !important;
+    padding: 8px 12px !important;
+  }
+  body > .selectize-dropdown .option:hover,
+  body > .selectize-dropdown .option.active {
+    background: #DF9531 !important;
+    color: #fff !important;
+  }
+  body > .selectize-dropdown .selectize-dropdown-content {
+    background: #1e232a !important;
+    max-height: 400px !important;
+    overflow-y: auto !important;
+  }
+  .ec-btn-activo { background: #DF9531 !important; border-color: #DF9531 !important; color: #fff !important; box-shadow: 0 0 0 2px rgba(223,149,49,0.3) !important; }
+  .ec-contador-estaciones { font-size: 11px !important; color: rgba(247,249,250,0.7) !important; text-align: center !important; padding: 4px 0 8px 0 !important; letter-spacing: 0.04em !important; }
+  /* Ocultar scrollbar del drawer - mantiene overflow visible */
+  #ec_drawer_filtros,
+  #ec_drawer_filtros .ec-drawer-body {
+    overflow: visible !important;
+    overflow-y: visible !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  #ec_drawer_filtros::-webkit-scrollbar,
+  #ec_drawer_filtros .ec-drawer-body::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
   }
 '))
     ),
