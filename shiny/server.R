@@ -17,44 +17,60 @@ server <- function(input, output, session) {
     as.integer(e)
   })
 
+  metadata <- shiny::reactive({
+    dat <- api_get("/metadata", list(chile_only = "1"), timeout = API_TIMEOUT_DEFAULT)
+    if (is.null(dat) || !is.list(dat)) {
+      dat <- list(
+        variables = api_get("/variables", timeout = API_TIMEOUT_DEFAULT),
+        fuentes = api_get("/fuentes", timeout = API_TIMEOUT_DEFAULT),
+        regiones = api_get("/regiones", list(chile_only = "1"), timeout = API_TIMEOUT_DEFAULT)
+      )
+    }
+    if (is.null(dat) || !is.list(dat)) dat <- list(variables = list(), fuentes = list(), regiones = list())
+    dat
+  })
+
   variables <- shiny::reactive({
-    dat <- api_get("/variables", timeout = API_TIMEOUT_DEFAULT)
-    if (is.null(dat)) return(data.frame(id = integer(), nombre = character()))
-    if (is.data.frame(dat)) return(dat[, c("id", "nombre"), drop = FALSE])
-    rows <- lapply(dat, function(x) data.frame(id = as.integer(x$id %||% NA), nombre = as.character(x$nombre %||% x$nombre_abr %||% ""), stringsAsFactors = FALSE))
+    m <- metadata()
+    v <- m$variables
+    if (is.null(v) || length(v) == 0) return(data.frame(id = integer(), nombre = character()))
+    if (is.data.frame(v)) return(v[, c("id", "nombre"), drop = FALSE])
+    rows <- lapply(v, function(x) data.frame(id = as.integer(x$id %||% NA), nombre = as.character(x$nombre %||% x$nombre_abr %||% ""), stringsAsFactors = FALSE))
     if (length(rows) == 0) return(data.frame(id = integer(), nombre = character()))
     df <- do.call(rbind, rows)
     df$id <- as.integer(df$id)
     df[, c("id", "nombre")]
   })
 
+  fuentes <- shiny::reactive({
+    m <- metadata()
+    f <- m$fuentes
+    if (is.null(f) || length(f) == 0) return(data.frame(id = integer(), nombre = character()))
+    if (is.data.frame(f)) return(f[, c("id", "nombre"), drop = FALSE])
+    rows <- lapply(f, function(x) data.frame(id = as.integer(x$id %||% NA), nombre = as.character(x$nombre %||% ""), stringsAsFactors = FALSE))
+    if (length(rows) == 0) return(data.frame(id = integer(), nombre = character()))
+    do.call(rbind, rows)
+  })
+
   regiones <- shiny::reactive({
-    dat <- api_get("/regiones", list(chile_only = "1"), timeout = API_TIMEOUT_DEFAULT)
-    if (is.null(dat)) return(data.frame(id = integer(), nombre = character()))
-    if (is.data.frame(dat)) return(dat[, c("id", "nombre"), drop = FALSE])
-    rows <- lapply(dat, function(x) data.frame(id = as.integer(x$id %||% NA), nombre = as.character(x$nombre %||% ""), stringsAsFactors = FALSE))
+    m <- metadata()
+    r <- m$regiones
+    if (is.null(r) || length(r) == 0) return(data.frame(id = integer(), nombre = character()))
+    if (is.data.frame(r)) return(r[, c("id", "nombre"), drop = FALSE])
+    rows <- lapply(r, function(x) data.frame(id = as.integer(x$id %||% NA), nombre = as.character(x$nombre %||% ""), stringsAsFactors = FALSE))
     if (length(rows) == 0) return(data.frame(id = integer(), nombre = character()))
     do.call(rbind, rows)
   })
 
   comunas <- shiny::reactive({
-    reg <- region_aplicada()
-    params <- list(chile_only = "1")
-    if (!is.null(reg) && reg != "" && !is.na(as.integer(reg))) params$region <- as.integer(reg)
+    reg <- input$region
+    if (is.null(reg) || reg == "" || reg == "0" || is.na(as.integer(reg))) return(data.frame(nombre = character()))
+    params <- list(chile_only = "1", region = as.integer(reg))
     dat <- api_get("/comunas", params, timeout = API_TIMEOUT_DEFAULT)
     if (is.null(dat)) return(data.frame(nombre = character()))
     if (is.data.frame(dat)) return(dat[, "nombre", drop = FALSE])
     rows <- lapply(dat, function(x) data.frame(nombre = as.character(x$nombre %||% ""), stringsAsFactors = FALSE))
     if (length(rows) == 0) return(data.frame(nombre = character()))
-    do.call(rbind, rows)
-  })
-
-  fuentes <- shiny::reactive({
-    dat <- api_get("/fuentes", timeout = API_TIMEOUT_DEFAULT)
-    if (is.null(dat)) return(data.frame(id = integer(), nombre = character()))
-    if (is.data.frame(dat)) return(dat[, c("id", "nombre"), drop = FALSE])
-    rows <- lapply(dat, function(x) data.frame(id = as.integer(x$id %||% NA), nombre = as.character(x$nombre %||% ""), stringsAsFactors = FALSE))
-    if (length(rows) == 0) return(data.frame(id = integer(), nombre = character()))
     do.call(rbind, rows)
   })
 
@@ -238,12 +254,11 @@ server <- function(input, output, session) {
 
   shiny::observe({
     com <- comunas()
-    if (nrow(com) > 0) {
-      ch <- c("Comuna" = "", setNames(com$nombre, com$nombre))
-      com_ap <- comuna_aplicada()
-      sel <- if (!is.null(com_ap) && nzchar(com_ap) && com_ap %in% com$nombre) com_ap else ""
-      shiny::updateSelectInput(session, "comuna", choices = ch, selected = sel)
-    }
+    ch <- c("Comuna" = "")
+    if (nrow(com) > 0) ch <- c(ch, setNames(com$nombre, com$nombre))
+    com_ap <- comuna_aplicada()
+    sel <- if (nrow(com) > 0 && !is.null(com_ap) && nzchar(com_ap) && com_ap %in% com$nombre) com_ap else ""
+    shiny::updateSelectInput(session, "comuna", choices = ch, selected = sel)
   })
 
   shiny::observe({
@@ -324,7 +339,7 @@ server <- function(input, output, session) {
     c(Sys.Date() - 730, Sys.Date())
   })
 
-  mapa_server("mapa", estaciones, estacion_id)
+  mapa_server("mapa", estaciones, estacion_id, fuentes)
   grafico_server("grafico", estacion_id_ver, variable_id, ver_datos_click, datos, periodo_seleccionado)
   descarga_server("descarga", variable_id_descarga, estacion_id_descarga, periodo_descarga)
 }

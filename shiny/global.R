@@ -37,6 +37,43 @@ api_get <- function(path, params = NULL, timeout = API_TIMEOUT_DEFAULT,
   }
   return(NULL)
 }
+
+# Fechas desde API JSON / listas / POSIX: evita "don't know how to convert ... to Date".
+ec_coerce_una_fecha <- function(x) {
+  if (is.null(x)) return(as.Date(NA))
+  if (is.data.frame(x)) {
+    if (nrow(x) < 1L || ncol(x) < 1L) return(as.Date(NA))
+    return(ec_coerce_una_fecha(x[[1L]][[1L]]))
+  }
+  if (is.array(x) && length(x) == 1L) x <- as.vector(x)
+  if (inherits(x, "Date")) {
+    if (length(x) == 0L) return(as.Date(NA))
+    return(x[1L])
+  }
+  if (inherits(x, "POSIXct") || inherits(x, "POSIXlt")) {
+    if (length(x) == 0L) return(as.Date(NA))
+    return(as.Date(x[1L]))
+  }
+  if (is.factor(x)) x <- as.character(x)
+  if (is.character(x)) {
+    xs <- trimws(as.character(x[1L]))
+    if (!nzchar(xs) || is.na(xs)) return(as.Date(NA))
+    d <- suppressWarnings(as.Date(xs))
+    if (!is.na(d)) return(d)
+    for (fmt in c("%Y-%m-%dT%H:%M:%OS", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%OS",
+                  "%Y-%m-%d %H:%M:%S", "%Y-%m-%d")) {
+      p <- suppressWarnings(strptime(xs, format = fmt, tz = "UTC"))
+      if (!is.na(p)) return(as.Date(p))
+    }
+    return(suppressWarnings(as.Date(substr(xs, 1L, 10L))))
+  }
+  if (is.numeric(x) && length(x) >= 1L && !is.na(x[1L])) {
+    return(as.Date(as.numeric(x[1L]), origin = "1970-01-01"))
+  }
+  if (is.list(x)) return(ec_coerce_una_fecha(x[[1L]]))
+  suppressWarnings(tryCatch(as.Date(x), error = function(e) as.Date(NA)))
+}
+
 # Modulos (funcionalidad)
 source("modules/mapa.R", local = FALSE)
 source("modules/grafico.R", local = FALSE)

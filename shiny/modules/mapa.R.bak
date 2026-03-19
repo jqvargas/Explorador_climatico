@@ -1,0 +1,56 @@
+﻿#' @export
+mapa_ui <- function(id) {
+  ns <- shiny::NS(id)
+  leaflet::leafletOutput(ns("mapa"), height = "100%")
+}
+
+#' @export
+mapa_server <- function(id, estaciones, estacion_id) {
+  shiny::moduleServer(id, function(input, output, session) {
+    ns <- session\
+    bounds <- list(lng1 = -76, lat1 = -56, lng2 = -66, lat2 = -17)
+
+    output\ <- leaflet::renderLeaflet({
+      df <- estaciones()
+      m <- leaflet::leaflet() |>
+        leaflet::addProviderTiles("CartoDB.Positron") |>
+        leaflet::fitBounds(bounds\, bounds\, bounds\, bounds\)
+      if (is.null(df) || nrow(df) == 0) return(m)
+      eid <- estacion_id()
+      pal <- leaflet::colorFactor("Set1", domain = unique(df\))
+      resto <- if (!is.null(eid) && eid %in% df\) df[df\ != eid, , drop = FALSE] else df
+      if (nrow(resto) > 0) {
+        m <- leaflet::addCircleMarkers(m, data = resto,
+          lng = ~lon, lat = ~lat, color = ~pal(macrozona), fillColor = ~pal(macrozona),
+          fillOpacity = 0.7, radius = 8, layerId = ~id,
+          clusterOptions = leaflet::markerClusterOptions())
+      }
+      if (!is.null(eid) && eid %in% df\) {
+        sel <- df[df\ == eid, , drop = FALSE]
+        m <- leaflet::addCircleMarkers(m, data = sel, lng = ~lon, lat = ~lat,
+          color = "#E85D24", fillColor = "#E85D24", fillOpacity = 0.9, radius = 12, weight = 2,
+          layerId = ~id)
+        popup_html <- paste0("<b>", gsub("[<>]", "", sel\[1]), "</b><br>Lat: ", round(sel\[1], 5), " | Lon: ", round(sel\[1], 5))
+        m <- leaflet::addPopups(m, lng = sel\[1], lat = sel\[1], popup = popup_html, options = leaflet::popupOptions(closeButton = TRUE, maxWidth = 280))
+      }
+      m
+    })
+
+    shiny::observeEvent(estacion_id(), {
+      eid <- estacion_id()
+      if (is.null(eid)) return()
+      df <- estaciones()
+      r <- df[df\ == eid, , drop = FALSE]
+      if (nrow(r) > 0) {
+        leaflet::leafletProxy("mapa", session = session) |>
+          leaflet::setView(lng = r\[1], lat = r\[1], zoom = 10)
+      }
+    }, ignoreNULL = TRUE)
+
+    shiny::observeEvent(input\, {
+      click <- input\
+      if (is.null(click\)) return()
+      estacion_id(as.integer(click\))
+    }, ignoreNULL = TRUE)
+  })
+}

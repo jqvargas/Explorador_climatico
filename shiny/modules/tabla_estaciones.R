@@ -89,11 +89,11 @@ tabla_estaciones_server <- function(id, estaciones, fuentes, variable_id,
             )
             if (!is.null(res) && is.list(res)) {
               cnt <- as.numeric(res$conteo %||% 0)
-              fmn <- res$fecha_min
-              fmx <- res$fecha_max
-              if (!is.null(fmn) && !is.null(fmx)) {
-                dias <- as.numeric(difftime(as.Date(fmx), as.Date(fmn), units = "days")) + 1
-                if (dias > 0) comp <- round(100 * cnt / dias, 1)
+              dmn <- ec_coerce_una_fecha(res$fecha_min)
+              dmx <- ec_coerce_una_fecha(res$fecha_max)
+              if (!is.na(dmn) && !is.na(dmx)) {
+                dias <- as.numeric(difftime(dmx, dmn, units = "days")) + 1
+                if (!is.na(dias) && dias > 0) comp <- round(100 * cnt / dias, 1)
               }
             }
           }

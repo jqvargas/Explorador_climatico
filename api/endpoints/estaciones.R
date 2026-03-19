@@ -82,7 +82,10 @@ function(id) {
   df <- DBI::dbGetQuery(conn, "SELECT id, nombre, lat, lon, tipo, macrozona, nom_reg, nom_com, id_fuente,
     fecha_ini, altura, nom_cuen as cuenca, nom_subc as subcuenca FROM estacion WHERE id = $1", params = list(as.integer(id)))
   if (nrow(df) == 0) return(list(error = "No encontrada"))
-  jsonlite::toJSON(df[1, ], auto_unbox = TRUE)
+  # Lista nativa: si se devuelve jsonlite::toJSON(), Plumber vuelve a serializar y el cliente
+  # puede recibir string u objeto mal formado; asi el JSON llega como un solo objeto con campos escalares.
+  row <- df[1, , drop = FALSE]
+  stats::setNames(lapply(seq_along(row), function(j) row[[j]][[1]]), names(row))
 }
 
 #* Variables disponibles en una estacion con rango de fechas
