@@ -41,6 +41,7 @@ api_get <- function(path, params = NULL, timeout = API_TIMEOUT_DEFAULT,
 source("modules/mapa.R", local = FALSE)
 source("modules/grafico.R", local = FALSE)
 source("modules/tabla.R", local = FALSE)
+source("modules/tabla_estaciones.R", local = FALSE)
 source("modules/descarga.R", local = FALSE)
 # Componentes UI (estructura)
 source("ui_components.R", local = FALSE)

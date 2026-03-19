@@ -193,6 +193,22 @@ div.outer {
   border-color: #DF9531;
   color: #fff;
 }
+.ec-btn-clear {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 6px;
+  color: rgba(247,249,250,0.8);
+  font-size: 12px;
+}
+.ec-drawer .ec-btn-clear:hover {
+  background: rgba(231,76,60,0.5);
+  border-color: rgba(231,76,60,0.7);
+  color: #fff;
+}
 .ec-drawer .btn-primary { width: 100%; margin-top: 12px; }
 
 /* Boton Ver datos */
@@ -271,3 +287,8 @@ div.outer {
 #ec_drawer_filtros { background: transparent !important; }
 #ec_drawer_filtros .selectize-control { border: none !important; box-shadow: none !important; background: transparent !important; }
 #ec_drawer_filtros .selectize-input { border: 1px solid rgba(255,255,255,0.35) !important; background: rgba(255,255,255,0.10) !important; box-shadow: none !important; }
+/* Tabla estaciones */
+.ec-tabla-estaciones-actions { margin-bottom: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
+.ec-tabla-estaciones-wrap { overflow-x: auto; max-height: 280px; }
+.ec-btn-ver-serie-row { background: #DF9531 !important; color: #fff !important; border-color: #DF9531 !important; }
+.ec-btn-ver-serie-row:hover { background: #c78528 !important; color: #fff !important; }

@@ -2,7 +2,17 @@
 # Usa ec_sidebar_filters (misma estructura que funcionaba) como overlay
 # NO cambiar inputId - el server.R depende de ellos
 
-ec_filter_block <- function(select_id, placeholder, choices, button_id, selected = NULL) {
+ec_filter_block <- function(select_id, placeholder, choices, button_id, selected = NULL, clear_button_id = NULL) {
+  btn_row <- list(
+    shiny::actionButton(button_id, "", icon = shiny::icon("check"),
+      class = "ec-btn-apply", title = "Aplicar")
+  )
+  if (!is.null(clear_button_id)) {
+    btn_row <- c(btn_row, list(
+      shiny::actionButton(clear_button_id, "", icon = shiny::icon("times"),
+        class = "ec-btn-clear", title = "Quitar filtro")
+    ))
+  }
   div(class = "ec-filter-block",
     div(class = "ec-filter-row",
       div(class = "ec-filter-select",
@@ -18,17 +28,18 @@ ec_filter_block <- function(select_id, placeholder, choices, button_id, selected
             dropdownParent = "body"
           ))
       ),
-      shiny::actionButton(button_id, "", icon = shiny::icon("check"),
-        class = "ec-btn-apply", title = "Aplicar")
+      btn_row
     )
   )
 }
 
 ec_sidebar_filters <- function() {
   div(class = "ec-sidebar-filters",
-    ec_filter_block("operador", NULL, c("Operador" = "0"), "aplicar_operador", selected = "0"),
-    ec_filter_block("variable", NULL, c("Variable" = ""), "aplicar_variable", selected = ""),
-    ec_filter_block("estacion", NULL, c("Estacion" = ""), "aplicar_estacion", selected = ""),
+    ec_filter_block("operador", NULL, c("Operador" = "0"), "aplicar_operador", selected = "0", clear_button_id = "quitar_filtro_operador"),
+    ec_filter_block("variable", NULL, c("Variable" = ""), "aplicar_variable", selected = "", clear_button_id = "quitar_filtro_variable"),
+    ec_filter_block("region", NULL, c("Region" = ""), "aplicar_region", selected = "", clear_button_id = "quitar_filtro_region"),
+    ec_filter_block("comuna", NULL, c("Comuna" = ""), "aplicar_comuna", selected = "", clear_button_id = "quitar_filtro_comuna"),
+    ec_filter_block("estacion", NULL, c("Estacion" = ""), "aplicar_estacion", selected = "", clear_button_id = "quitar_filtro_estacion"),
     shiny::div(class = "ec-contador-estaciones", shiny::textOutput("contador_estaciones")),
     div(class = "ec-filter-block",
       shiny::actionButton("ver_datos", "Ver datos", icon = shiny::icon("play"), class = "btn-primary ec-btn-ver-datos")
@@ -66,6 +77,14 @@ ec_dashboard_layout <- function(title = APP_TITLE) {
             else if (val === 3) p.classList.add('ec-panel-maximized');
             if (typeof Shiny !== 'undefined' && Shiny.setInputValue) Shiny.setInputValue('panel_datos_state', val, {priority: 'event'});
           });
+          Shiny.addCustomMessageHandler('panel_modo', function(msg) {
+            var s = document.getElementById('ec_panel_serie');
+            var t = document.getElementById('ec_panel_tabla');
+            if (s && t) {
+              if (msg && msg.modo === 'tabla') { s.style.display = 'none'; t.style.display = 'block'; }
+              else { s.style.display = 'block'; t.style.display = 'none'; }
+            }
+          });
         ")),
         shiny::div(style = "display:none;", shiny::numericInput("panel_datos_state", NULL, value = 0, min = 0, max = 3, step = 1)),
         shiny::div(
@@ -88,8 +107,16 @@ ec_dashboard_layout <- function(title = APP_TITLE) {
               )
             ),
             shiny::div(class = "ec-panel-datos-body",
-              style = "padding:8px;overflow:visible;flex:1 1 auto;min-height:0;",
-              grafico_ui("grafico")
+              style = "padding:8px;overflow:visible;flex:1 1 auto;min-height:0;display:flex;flex-direction:column;",
+              shiny::div(id = "ec_panel_serie", class = "ec-panel-contenido",
+                grafico_ui("grafico")
+              ),
+              shiny::div(id = "ec_panel_tabla", class = "ec-panel-contenido", style = "display:none;",
+                tabla_estaciones_ui("tabla_estaciones")
+              ),
+              shiny::div(class = "ec-panel-descarga", style = "margin-top:12px;padding-top:12px;border-top:1px solid #eee;",
+                descarga_ui("descarga")
+              )
             )
           )
         ),
@@ -115,7 +142,7 @@ ec_dashboard_layout <- function(title = APP_TITLE) {
       ),
       shiny::tags$script(HTML("
         (function(){
-          var btnEstados = { aplicar_operador: false, aplicar_variable: false, aplicar_estacion: false };
+          var btnEstados = { aplicar_operador: false, aplicar_variable: false, aplicar_region: false, aplicar_comuna: false, aplicar_estacion: false };
           function aplicarEstados() {
             Object.keys(btnEstados).forEach(function(id) {
               var btn = document.getElementById(id);

@@ -7,8 +7,9 @@
 #* @param con_datos Si "1", solo estaciones con al menos una observacion
 #* @param id_variable Filtrar por variable (solo estaciones con datos de esa variable)
 #* @param id_fuente Filtrar por operador/fuente (DGA, DMC, etc). ID numerico
+#* @param comuna Nombre de comuna (nom_com). Vacío = sin filtrar
 #* @get /estaciones
-function(macrozona = "", region = "", chile_only = "1", minimal = "", con_datos = "", id_fuente = "", id_variable = "") {
+function(macrozona = "", region = "", comuna = "", chile_only = "1", minimal = "", con_datos = "", id_fuente = "", id_variable = "") {
   conn <- get_db_connection()
   on.exit(DBI::dbDisconnect(conn))
   sel_minimal <- tolower(minimal) %in% c("1", "true", "yes", "si")
@@ -50,6 +51,10 @@ function(macrozona = "", region = "", chile_only = "1", minimal = "", con_datos 
   if (!is.null(region) && nzchar(region)) {
     q <- paste0(q, " AND e.cod_reg = $", length(params)+1)
     params <- c(params, as.integer(region))
+  }
+  if (!is.null(comuna) && nzchar(comuna)) {
+    q <- paste0(q, " AND TRIM(COALESCE(e.nom_com, '')) = $", length(params)+1)
+    params <- c(params, trimws(as.character(comuna)))
   }
   if (!is.null(id_fuente) && id_fuente != "" && id_fuente != "0") {
     fid <- as.integer(id_fuente)
@@ -97,8 +102,40 @@ function(id) {
   df
 }
 
+#* Lista regiones unicas (cod_reg, nom_reg)
+#* @param chile_only Si "1", solo estaciones en Chile continental
+#* @get /regiones
+function(chile_only = "1") {
+  conn <- get_db_connection()
+  on.exit(DBI::dbDisconnect(conn))
+  q <- "SELECT DISTINCT cod_reg AS id, nom_reg AS nombre FROM estacion WHERE cod_reg IS NOT NULL AND nom_reg IS NOT NULL AND TRIM(nom_reg) != ''"
+  if (tolower(chile_only) %in% c("1", "true", "yes", "si")) {
+    q <- paste0(q, " AND lat BETWEEN -56 AND -17 AND lon BETWEEN -76 AND -66")
+  }
+  q <- paste0(q, " ORDER BY nom_reg")
+  DBI::dbGetQuery(conn, q)
+}
 
-
+#* Lista comunas unicas (nom_com)
+#* @param region Filtrar por cod_reg. Vacío = todas las comunas
+#* @param chile_only Si "1", solo estaciones en Chile continental
+#* @get /comunas
+function(region = "", chile_only = "1") {
+  conn <- get_db_connection()
+  on.exit(DBI::dbDisconnect(conn))
+  q <- "SELECT DISTINCT TRIM(nom_com) AS nombre FROM estacion WHERE nom_com IS NOT NULL AND TRIM(nom_com) != ''"
+  params <- list()
+  if (tolower(chile_only) %in% c("1", "true", "yes", "si")) {
+    q <- paste0(q, " AND lat BETWEEN -56 AND -17 AND lon BETWEEN -76 AND -66")
+  }
+  if (nzchar(region) && !is.na(as.integer(region))) {
+    q <- paste0(q, " AND cod_reg = $1")
+    params <- list(as.integer(region))
+  }
+  q <- paste0(q, " ORDER BY nombre")
+  df <- if (length(params) > 0) DBI::dbGetQuery(conn, q, params = params) else DBI::dbGetQuery(conn, q)
+  df
+}
 
 
 
