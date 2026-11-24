@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ranking Widgets — Explorador Climático</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand:       #DF9531;
+    --dark:        #394553;
+    --water:       #378ADD;
+    --bg:          #F4F6F8;
+    --text:        #394553;
+    --text-muted:  #8A95A0;
+    --white:       #FFFFFF;
+    --border:      rgba(57,69,83,0.08);
+    --shadow:      0 2px 12px rgba(57,69,83,0.09), 0 1px 3px rgba(57,69,83,0.06);
+    --radius:      14px;
+    --green:       #2BAF6E;
+    --warn-bg:     rgba(223,149,49,0.06);
+    --warn-border: rgba(223,149,49,0.24);
+    --warn-text:   #7A5810;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2.5rem 1rem 4rem;
+    gap: 2.5rem;
+  }
+
+  /* ── PAGE SECTION LABELS ──────────────────────────── */
+  .section-label {
+    width: 100%;
+    max-width: 480px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    opacity: 0.5;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: -1.2rem;
+  }
+
+  /* ── WIDGET SHELL ─────────────────────────────────── */
+  .widget {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 480px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  /* ── HEADER ───────────────────────────────────────── */
+  .widget-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 17px 22px 13px;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .widget-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* ── PILL GROUPS (modo selector) ─────────────────── */
+  .pill-group {
+    display: flex;
+    gap: 3px;
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 3px;
+  }
+
+  .pill {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+  }
+
+  .pill.active {
+    background: var(--white);
+    color: var(--water);
+    box-shadow: 0 1px 4px rgba(57,69,83,0.12);
+  }
+
+  /* ── MONTH SCROLLER ───────────────────────────────── */
+  .month-scroller {
+    display: flex;
+    gap: 5px;
+    overflow-x: auto;
+    padding: 11px 22px;
+    border-bottom: 1px solid var(--border);
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .month-scroller::-webkit-scrollbar { display: none; }
+
+  .month-chip {
+    font-size: 11.5px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+    transition: all 0.13s ease;
+    flex-shrink: 0;
+  }
+
+  .month-chip.active {
+    background: var(--water);
+    color: var(--white);
+    border-color: var(--water);
+  }
+
+  /* ── COLUMN LABELS ────────────────────────────────── */
+  .col-labels {
+    display: grid;
+    grid-template-columns: 52px 1fr auto;
+    padding: 8px 22px 4px;
+  }
+
+  .col-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    opacity: 0.5;
+  }
+  .col-label.right { text-align: right; }
+
+  /* ── RANKING ROWS ─────────────────────────────────── */
+  .rank-list { padding: 3px 0 5px; }
+
+  .rank-row {
+    display: grid;
+    grid-template-columns: 52px 1fr auto;
+    align-items: center;
+    padding: 11px 22px;
+    position: relative;
+    transition: background 0.12s ease;
+    cursor: default;
+  }
+
+  .rank-row:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 22px; right: 22px;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .rank-row:hover { background: rgba(55,138,221,0.03); }
+
+  .rank-col { display: flex; align-items: center; }
+
+  .medal { font-size: 22px; line-height: 1; }
+
+  .rank-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-muted);
+    width: 28px;
+    text-align: center;
+    opacity: 0.4;
+  }
+
+  /* Label column */
+  .label-col {
+    font-family: 'DM Mono', monospace;
+    font-size: 21px;
+    font-weight: 500;
+    color: var(--dark);
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .label-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .label-sub {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 0;
+  }
+
+  /* Date label for Diario */
+  .date-main {
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--dark);
+    letter-spacing: -0.01em;
+  }
+  .date-year {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+
+  /* Value column */
+  .value-col { text-align: right; }
+
+  .value-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--water);
+    letter-spacing: -0.02em;
+  }
+
+  .value-unit {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-muted);
+    margin-left: 2px;
+  }
+
+  /* Gold accent */
+  .rank-row.gold .value-num { color: var(--brand); }
+
+  /* Badge */
+  .badge {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--white);
+    border-radius: 4px;
+    padding: 2px 6px;
+    line-height: 1.4;
+  }
+  .badge.green { background: var(--green); }
+
+  /* ── CURRENT PERIOD PINNED SECTION ────────────────── */
+  .current-section {
+    border-top: 1px dashed rgba(57,69,83,0.13);
+    background: var(--warn-bg);
+  }
+
+  .current-section-label {
+    padding: 8px 22px 1px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--brand);
+    opacity: 0.85;
+  }
+
+  .rank-row.current .label-col { color: var(--brand); }
+  .rank-row.current .value-num { color: var(--brand); opacity: 0.9; }
+  .rank-row.current .rank-num  { color: var(--brand); opacity: 0.65; font-size: 16px; }
+
+  /* ── INCOMPLETE WARNING BLOCK ─────────────────────── */
+  .incomplete-bar {
+    margin: 0 22px 13px;
+    background: rgba(223,149,49,0.09);
+    border: 1px solid var(--warn-border);
+    border-radius: 9px;
+    padding: 9px 13px;
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+  }
+
+  .incomplete-icon { font-size: 13px; line-height: 1.4; flex-shrink: 0; }
+
+  .incomplete-body { flex: 1; }
+
+  .incomplete-text {
+    font-size: 11.5px;
+    color: var(--warn-text);
+    line-height: 1.45;
+  }
+  .incomplete-text strong { font-weight: 600; }
+
+  .incomplete-date {
+    display: inline-block;
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10.5px;
+    background: rgba(223,149,49,0.15);
+    color: var(--warn-text);
+    border-radius: 4px;
+    padding: 1px 7px;
+  }
+
+  /* ── COMPLETO / HASTA HOY TOGGLE ─────────────────── */
+  /*  Lives inside the incomplete-bar, contextual to the warning */
+  .compare-toggle {
+    display: flex;
+    gap: 3px;
+    margin-top: 9px;
+    background: rgba(223,149,49,0.11);
+    border-radius: 7px;
+    padding: 3px;
+    width: fit-content;
+  }
+
+  .compare-pill {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 5px;
+    border: none;
+    background: transparent;
+    color: var(--warn-text);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.13s ease;
+    opacity: 0.65;
+  }
+
+  .compare-pill.active {
+    background: var(--white);
+    color: var(--brand);
+    opacity: 1;
+    box-shadow: 0 1px 4px rgba(57,69,83,0.13);
+  }
+
+  /* ── DIARIO — last record notice ─────────────────── */
+  /* No toggle needed: every recorded day is always complete */
+  .last-record-bar {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 4px 22px 14px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  .last-record-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+  }
+
+  .last-record-text {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  .last-record-text strong {
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: var(--dark);
+  }
+
+  /* ── INSIGHT FOOTER ───────────────────────────────── */
+  .widget-footer {
+    border-top: 1px solid var(--border);
+    padding: 12px 22px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .insight-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--water);
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+
+  .insight-text {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .insight-text strong { color: var(--dark); font-weight: 600; }
+</style>
+</head>
+<body>
+
+
+<!-- ════════════════════════════════════════════════════════
+     WIDGET 1 — ANUAL
+     Particularidades:
+     · Toggle Completo / Hasta hoy dentro del aviso de año incompleto
+     · Fila "Año en curso" siempre visible al fondo
+     ════════════════════════════════════════════════════════ -->
+<p class="section-label">Widget 1 — Anual</p>
+
+<div class="widget">
+
+  <div class="widget-header">
+    <span class="widget-title">Años más lluviosos</span>
+    <div class="pill-group">
+      <button class="pill active">Anual</button>
+      <button class="pill">Mensual</button>
+      <button class="pill">Diario</button>
+    </div>
+  </div>
+
+  <div class="col-labels">
+    <span class="col-label">#</span>
+    <span class="col-label">Año</span>
+    <span class="col-label right">Total</span>
+  </div>
+
+  <div class="rank-list">
+    <div class="rank-row gold">
+      <div class="rank-col"><span class="medal">🥇</span></div>
+      <div class="label-col">1987</div>
+      <div class="value-col"><span class="value-num">712,1</span><span class="value-unit">mm</span></div>
+    </div>
+    <div class="rank-row">
+      <div class="rank-col"><span class="medal">🥈</span></div>
+      <div class="label-col">1997</div>
+      <div class="value-col"><span class="value-num">709,3</span><span class="value-unit">mm</span></div>
+    </div>
+    <div class="rank-row">
+      <div class="rank-col"><span class="medal">🥉</span></div>
+      <div class="label-col">1982</div>
+      <div class="value-col"><span class="value-num">623,4</span><span class="value-unit">mm</span></div>
+    </div>
+    <div class="rank-row">
+      <div class="rank-col"><span class="rank-num">4</span></div>
+      <div class="label-col">2002 <span class="badge green">Reciente</span></div>
+      <div class="value-col"><span class="value-num">600,8</span><span class="value-unit">mm</span></div>
+    </div>
+    <div class="rank-row">
+      <div class="rank-col"><span class="rank-num">5</span></div>
+      <div class="label-col">1972</div>
+      <div class="value-col"><span class="value-num">595,3</span><span class="value-unit">mm</span></div>
+    </div>
+  </div>
+
+  <!-- Año en curso — siempre visible, separado del top 5 histórico -->
+  <div class="current-section">
+    <p class="current-section-label">Año en curso</p>
+    <div class="rank-row current">
+      <div class="rank-col"><span class="rank-num">#12</span></div>
+      <div class="label-col">2025</div>
+      <div class="value-col"><span class="value-num">341,7</span><span class="value-unit">mm</span></div>
+    </div>
+    <!--
+      LÓGICA: mostrar este bloque solo si el año actual está incompleto.
+      Si el año ya está completo (31 dic registrado), omitir bloque y omitir toggle.
+    -->
+    <div class="incomplete-bar">
+      <span class="incomplete-icon">⚠️</span>
+      <div class="incomplete-body">
+        <p class="incomplete-text">Año incompleto — la comparación puede ser dispareja.</p>
+        <span class="incomplete-date">Último registro: 18 may 2025</span>
+        <!--
+          Toggle: "Completo" usa los totales anuales completos de años anteriores
+          como referencia (favorece los años lluviosos con mucho dic/nov).
+          "Hasta hoy" corta todos los años históricos al mismo día y mes
+          del último registro (18 may), haciendo la comparación pareja.
+          El ranking y el #puesto de 2025 cambian según la selección.
+        -->
+        <div class="compare-toggle">
+          <button class="compare-pill active">Completo</button>
+          <button class="compare-pill">Hasta hoy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="widget-footer">
+    <div class="insight-dot"></div>
+    <p class="insight-text">
+      <strong>2025</strong> acumula <strong>#12</strong> entre los años más lluviosos — usando totales anuales completos como referencia.
+    </p>
+  </div>
+
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════
+     WIDGET 2a — MENSUAL · modo "Todos los meses"
+     Particularidades:
+     · Selector Todos / Por mes en el header
+     · La etiqueta muestra Mes + Año en dos líneas
+     · Toggle Completo / Hasta hoy en el aviso del mes en curso
+     ════════════════════════════════════════════════════════ -->
+<p class="section-label">Widget 2a — Mensual · modo: todos los meses</p>
+
+<div class="widget">
+
+  <div class="widget-header">
+    <span class="widget-title">Meses más lluviosos</span>
+    <div class="pill-group">
+      <button class="pill active">Todos</button>
+      <button class="pill">Por mes</button>
+    </div>
+  </div>
+
+  <div class="col-labels">
+    <span class="col-label">#</span>
+    <span class="col-label">Mes · Año</span>
+    <span class="col-label right">Total</span>
+  </div>
+
+  <div class="rank-list">
+    <div class="rank-row gold">
+      <div class="rank-col"><span class="medal">🥇</span></div>
+      <div class="label-col">
+        <div class="label-stack">
+          <span>Jun 1987</span>
+          <span class="label-sub">Junio</span>
+        </div>
+      </div>
+      <div class="value-col"><span class="value-num">198,4</span><span class="value-unit">mm</span></div>
+    </div>
+    <div class="rank-row">
+      <div class="rank-col"><span class="medal">🥈</span></div>
+      <div class="label-col">
+        <div class="label-stack">
+          <span>Jul 1997</span>
+          <span class="label-sub">Julio</span>
+        </div>
+      </div>
+      <div class="value-col"><span class="value-num">185,2</span><span class="value-unit">mm</span></div>
+    </div>
+    <div class="rank-row">
+      <div class="rank-col"><span class="medal">🥉</span></div>
+      <div class="label-col">
+        <div class="label-stack">
+          <span>May 2008</span>
+          <span class="label-sub">Mayo</span>
+        </div>
+      </div>
+      <div class="value-col"><span class="value-num">172,9</span><span class="value-unit">mm</span></div>
+    </div>
+    <div class="rank-row">
+      <div class="rank-col"><span class="rank-num">4</span></div>
+      <div class="label-col">
+        <div class="label-stack">
+          <span>Jun 2002</span>
+          <span class="label-sub">Junio</span>
+        </div>
+      </div>
+      <div class="value-col"><span class="value-num">161,7</span><span class="value-unit">mm</span></div>
+    </div>
+    <div class="rank-row">
+      <div class="rank-col"><span class="rank-num">5</span></div>
+      <div class="label-col">
+        <div class="label-stack">
+          <span>Ago 1982</span>
+          <span class="label-sub">Agosto</span>
+        </div>
+      </div>
+      <div class="value-col"><span class="value-num">154,1</span><span class="value-unit">mm</span></div>
+    </div>
+  </div>
+
+  <!-- Mes en curso -->
+  <div class="current-section">
+    <p class="current-section-label">Mes en curso</p>
+    <div class="rank-row current">
+      <div class="rank-col"><span class="rank-num">#31</span></div>
+      <div class="label-col">
+        <div class="label-stack">
+          <span>May 2025</span>
+          <span class="label-sub" style="color: var(--brand); opacity: 0.75;">Mayo</span>
+        </div>
+      </div>
+      <div class="value-col"><span class="value-num">47,3</span><span class="value-unit">mm</span></div>
+    </div>
+    <!--
+      Mismo toggle que en Anual:
+      "Completo"  → compara mayo 2025 (parcial) vs totales completos de meses históricos.
+      "Hasta hoy" → corta todos los mayos históricos al día 18 para comparación pareja.
+    -->
+    <div class="incomplete-bar">
+      <span class="incomplete-icon">⚠️</span>
+      <div class="incomplete-body">
+        <p class="incomplete-text">Mes en curso — solo hay registros hasta el <strong>día 18</strong>.</p>
+        <span class="incomplete-date">Último registro: 18 may 2025</span>
+        <div class="compare-toggle">
+          <button class="compare-pill active">Completo</button>
+          <button class="compare-pill">Hasta hoy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="widget-footer">
+    <div class="insight-dot"></div>
+    <p class="insight-text">
+      <strong>May 2025</strong> se ubica <strong>#31</strong> entre todos los meses registrados — usando totales mensuales completos como referencia.
+    </p>
+  </div>
+
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════
+     WIDGET 2b — MENSUAL · modo "Por mes" (Julio seleccionado)
+     Particularidades:
+     · Selector de mes horizontal con scroll (12 chips)
+     · Ranking solo de los julios históricos
+     · Si el mes seleccionado ya pasó este año → fila con valor parcial + toggle
+     · Si el mes seleccionado aún no llegó → fila "sin datos aún" sin toggle
+     ════════════════════════════════════════════════════════ -->
+<p class="section-label">Widget 2b — Mensual · modo: por mes (Julio — mes futuro)</p>
+
+<div class="widget">
+
+  <div class="widget-header">
+    <span class="widget-title">Meses más lluviosos</span>
+    <div class="pill-group">
+      <button class="pill">Todos</button>
+      <button class="pill active">Por mes</button>
+    </div>
+  </div>
+
+  <!-- Scroll horizontal de los 12 meses -->
+  <div class="month-scroller">
+    <button class="month-chip">Ene</button>
+    <button class="month-chip">Feb</button>
+    <button class="month-chip">Mar</button>
+    <button class="month-chip">Abr</button>
+    <button class="month-chip">May</button>
+    <button class="month-chip">Jun</button>
+    <button class="month-chip active">Jul</button>
+    <button class="month-chip">Ago</button>
+    <button class="month-chip">Sep</button>
+    <button class="month-chip">Oct</button>
+    <button class="month-chip">Nov</button>
+    <button class="month-chip">Dic</button>
+  </div>
+
+  <div class="col-labels">
+    <span class="col-label">#</span>
+    <span class="col-label">Julio · Año</span>
+    <span class="col-label right">Total</span>
+  </div>
+
+  <div class="rank-list">
+    <div class="rank-row gold">
+      <div class="rank-col"><span class="medal">🥇</span></div>
+      <div class="label-col">Jul 1997</div>
+      <div class="value-col"><span class="value-num">185,2</span><span class="value-unit">mm</span></div>
+    </div>
+    <div class="rank-row">
+      <div class="rank-col"><span class="medal">🥈</span></div>
+      <div class="label-col">Jul 1982</div>
+      <div class="value-col"><span class="value-num">143,8</span><span class="value-unit">mm</span></div>
+    </div>
+    <div class="rank-row">
+      <div class="rank-col"><span class="medal">🥉</span></div>
+      <div class="label-col">Jul 2008</div>
+      <div class="value-col"><span class="value-num">131,5</span><span class="value-unit">mm</span></div>
+    </div>
+    <div class="rank-row">
+      <div class="rank-col"><span class="rank-num">4</span></div>
+      <div class="label-col">Jul 2019</div>
+      <div class="value-col"><span class="value-num">118,2</span><span class="value-unit">mm</span></div>
+    </div>
+    <div class="rank-row">
+      <div class="rank-col"><span class="rank-num">5</span></div>
+      <div class="label-col">Jul 1964</div>
+      <div class="value-col"><span class="value-num">109,6</span><span class="value-unit">mm</span></div>
+    </div>
+  </div>
+
+  <!--
+    CASO A: mes seleccionado AÚN NO HA LLEGADO este año (jul 2025 > may 2025).
+    Mostrar fila vacía + aviso sin toggle (no hay nada que comparar todavía).
+    CASO B (ver widget 2c abajo): mes ya pasó este año → valor parcial + toggle.
+  -->
+  <div class="current-section">
+    <p class="current-section-label">Julio 2025</p>
+    <div class="rank-row current" style="opacity: 0.45;">
+      <div class="rank-col"><span class="rank-num">—</span></div>
+      <div class="label-col" style="font-size:15px; font-family: DM Sans, sans-serif;">Sin datos aún</div>
+      <div class="value-col"><span class="value-num">—</span></div>
+    </div>
+    <div class="incomplete-bar" style="margin-bottom: 13px;">
+      <span class="incomplete-icon">📅</span>
+      <div class="incomplete-body">
+        <p class="incomplete-text">Julio 2025 aún no comenzó. El ranking se actualizará cuando lleguen los registros.</p>
+        <span class="incomplete-date">Último registro: 18 may 2025</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="widget-footer">
+    <div class="insight-dot"></div>
+    <p class="insight-text">
+      El <strong>julio más lluvioso</strong> fue <strong>1997</strong> con 185,2 mm — casi el doble del promedio histórico de julio.
+    </p>
+  </div>
+
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════
+     WIDGET 2c — MENSUAL · modo "Por mes" (Mayo — mes en curso)
+     Mismo widget 2b pero con Mayo seleccionado, que es el mes activo.
+     Muestra valor parcial con toggle Completo / Hasta hoy.
+     ════════════════════════════════════════════════════════ -->
+<p class="section-label">Widget 2c — Mensual · modo: por mes (Mayo — mes en curso)</p>
+
+<div class="widget">
+
+  <div class="widget-header">
+    <span class="widget-title">Meses más lluviosos</span>
+    <div class="pill-group">
+      <button class="pill">Todos</button>
+      <button class="pill active">Por mes</button>
+    </div>
+  </div>
+
+  <div class="month-scroller">
+    <button class="month-chip">Ene</button>
+    <button class="month-chip">Feb</button>
+    <button class="month-chip">Mar</button>
+    <button class="month-chip">Abr</button>
+    <button class="month-chip active">May</button>
+    <button class="month-chip">Jun</button>
+    <button class="month-chip">Jul</button>
+    <button class="month-chip">Ago</button>
+    <button class="month-chip">Sep</button>
+    <button class="month-chip">Oct</button>
+    <button class="month-chip">Nov</button>
+    <button class="month-chip">Dic</button>
+  </div>
+
+  <div class="col-labels">
+    <span class="col-label">#</span>
+    <span class="col-label">Mayo · Año</span>
+    <span class="col-label right">Total</span>
+  </div>
+
+  <div class="rank-list">
+    <div class="rank-row gold">
+      <div class="rank-col"><span class="medal">🥇</span></div>
+      <div class="label-col">May 2008</div>
+      <div class="value-col"><span class="value-num">172,9</span><span class="value-unit">mm</span></div>
+    </div>
+    <div class="rank-row">
+      <div class="rank-col"><span class="medal">🥈</span></div>
+      <div class="label-col">May 1987</div>
+      <div class="value-col"><span class="value-num">148,3</span><span class="value-unit">mm</span></div>
+    </div>
+    <div class="rank-row">
+      <div class="rank-col"><span class="medal">🥉</span></div>
+      <div class="label-col">May 1972</div>
+      <div class="value-col"><span class="value-num">131,1</span><span class="value-unit">mm</span></div>
+    </div>
+    <div class="rank-row">
+      <div class="rank-col"><span class="rank-num">4</span></div>
+      <div class="label-col">May 2002</div>
+      <div class="value-col"><span class="value-num">119,4</span><span class="value-unit">mm</span></div>
+    </div>
+    <div class="rank-row">
+      <div class="rank-col"><span class="rank-num">5</span></div>
+      <div class="label-col">May 1964</div>
+      <div class="value-col"><span class="value-num">104,7</span><span class="value-unit">mm</span></div>
+    </div>
+  </div>
+
+  <!-- Mes en curso con valor parcial y toggle -->
+  <div class="current-section">
+    <p class="current-section-label">Mayo 2025 · en curso</p>
+    <div class="rank-row current">
+      <div class="rank-col"><span class="rank-num">#18</span></div>
+      <div class="label-col">May 2025</div>
+      <div class="value-col"><span class="value-num">47,3</span><span class="value-unit">mm</span></div>
+    </div>
+    <div class="incomplete-bar">
+      <span class="incomplete-icon">⚠️</span>
+      <div class="incomplete-body">
+        <p class="incomplete-text">Mes en curso — solo registros hasta el <strong>día 18</strong>.</p>
+        <span class="incomplete-date">Último registro: 18 may 2025</span>
+        <!--
+          "Completo"  → compara mayo 2025 (días 1-18) vs totales de mayo completos.
+          "Hasta hoy" → corta todos los mayos históricos al día 18 para comparación pareja.
+        -->
+        <div class="compare-toggle">
+          <button class="compare-pill active">Completo</button>
+          <button class="compare-pill">Hasta hoy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="widget-footer">
+    <div class="insight-dot"></div>
+    <p class="insight-text">
+      <strong>May 2025</strong> acumula <strong>#18</strong> entre todos los mayos registrados — usando totales mensuales completos como referencia.
+    </p>
+  </div>
+
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════
+     WIDGET 3 — DIARIO
+     Particularidades:
+     · Sin toggle de resolución: cada día es siempre un registro completo.
+     · Sin toggle Completo/Hasta hoy: no aplica para eventos diarios puntuales.
+     · Solo se muestra el último día registrado como referencia.
+     · La etiqueta usa día + mes en grande, año en muted debajo.
+     ════════════════════════════════════════════════════════ -->
+<p class="section-label">Widget 3 — Diario</p>
+
+<div class="widget">
+
+  <div class="widget-header">
+    <span class="widget-title">Días más lluviosos</span>
+    <!-- Sin selector de resolución ni modo: el registro diario es la unidad mínima -->
+  </div>
+
+  <div class="col-labels">
+    <span class="col-label">#</span>
+    <span class="col-label">Fecha</span>
+    <span class="col-label right">Registro</span>
+  </div>
+
+  <div class="rank-list">
+    <div class="rank-row gold">
+      <div class="rank-col"><span class="medal">🥇</span></div>
+      <div class="label-col">
+        <div class="label-stack">
+          <span class="date-main">11 jun</span>
+          <span class="date-year">1987</span>
+        </div>
+      </div>
+      <div class="value-col"><span class="value-num">98,4</span><span class="value-unit">mm</span></div>
+    </div>
+    <div class="rank-row">
+      <div class="rank-col"><span class="medal">🥈</span></div>
+      <div class="label-col">
+        <div class="label-stack">
+          <span class="date-main">23 jul</span>
+          <span class="date-year">1997</span>
+        </div>
+      </div>
+      <div class="value-col"><span class="value-num">87,1</span><span class="value-unit">mm</span></div>
+    </div>
+    <div class="rank-row">
+      <div class="rank-col"><span class="medal">🥉</span></div>
+      <div class="label-col">
+        <div class="label-stack">
+          <span class="date-main">4 may</span>
+          <span class="date-year">2008</span>
+        </div>
+      </div>
+      <div class="value-col"><span class="value-num">79,5</span><span class="value-unit">mm</span></div>
+    </div>
+    <div class="rank-row">
+      <div class="rank-col"><span class="rank-num">4</span></div>
+      <div class="label-col">
+        <div class="label-stack">
+          <span class="date-main">17 ago</span>
+          <span class="date-year">1982</span>
+        </div>
+      </div>
+      <div class="value-col"><span class="value-num">71,2</span><span class="value-unit">mm</span></div>
+    </div>
+    <div class="rank-row">
+      <div class="rank-col"><span class="rank-num">5</span></div>
+      <div class="label-col">
+        <div class="label-stack">
+          <span class="date-main">2 jun</span>
+          <span class="date-year">1964</span>
+        </div>
+      </div>
+      <div class="value-col"><span class="value-num">68,8</span><span class="value-unit">mm</span></div>
+    </div>
+  </div>
+
+  <!--
+    Último día registrado — sin sección especial de año/mes en curso
+    porque cada observación diaria es siempre un dato completo.
+    Solo se informa cuál es el dato más reciente disponible.
+  -->
+  <div class="last-record-bar">
+    <div class="last-record-dot"></div>
+    <p class="last-record-text">
+      Último dato disponible: <strong>18 may 2025</strong> · 12,3 mm
+    </p>
+  </div>
+
+  <div class="widget-footer">
+    <div class="insight-dot"></div>
+    <p class="insight-text">
+      El <strong>día más lluvioso</strong> registrado fue el <strong>11 jun 1987</strong> con 98,4 mm en 24 horas.
+    </p>
+  </div>
+
+</div>
+
+
+</body>
+</html>

@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "objetivo": "Widget nativo de pronóstico de hoy en la TWA cl.rodaja.app: estación más cercana en el dispositivo, sin mandar coordenadas al servidor, sin cambiar el arranque normal de la TWA.",
+  "plan": "docs/producto/PLAN_WIDGET_PRONOSTICO.md",
+  "prompt": "docs/producto/widget_pronostico_PROMPT_FIJO.md",
+  "criterios": "docs/producto/widget_pronostico/criterios.md",
+  "notas": "status: pendiente | en_curso | hecho | hecho_con_gaps | bloqueado. Un agente a la vez. Reclamar la primera etapa pendiente de menor n. N exige N-1 en hecho o hecho_con_gaps. Baseline 2026-11-14. Prohibido: assetlinks, splash, start_url, bubblewrap update, ACCESS_BACKGROUND_LOCATION, enviar lat/lon, rankings en el JSON del widget, subir minSdk, publicar AAB.",
+  "status_significado": {
+    "pendiente": "Nadie la reclamo.",
+    "en_curso": "Agente vivo escribiendo plan o codigo.",
+    "hecho": "DoD de la etapa cerrada; handoff escrito; criterios del owner no pendientes.",
+    "hecho_con_gaps": "Etapa cerrada con gaps/caveats/tareas humanas pendientes, todos listados en el handoff.",
+    "bloqueado": "Falta decision o un prerequisito. Motivo en handoff. No implementar a ciegas."
+  },
+  "etapas": [
+    {
+      "n": 1,
+      "id": "api_hoy",
+      "status": "hecho",
+      "owner": "agente",
+      "titulo": "Endpoints livianos de catálogo y pronóstico de hoy, sin login ni rankings",
+      "plan_out": "docs/producto/widget_pronostico/etapa_1_plan.md",
+      "handoff_out": "docs/producto/widget_pronostico/etapa_1_handoff.md"
+    },
+    {
+      "n": 2,
+      "id": "android_logica",
+      "status": "hecho",
+      "owner": "agente",
+      "titulo": "Haversine, elección de estación y parseo JSON con pruebas JVM; minSdk 21",
+      "plan_out": "docs/producto/widget_pronostico/etapa_2_plan.md",
+      "handoff_out": "docs/producto/widget_pronostico/etapa_2_handoff.md"
+    },
+    {
+      "n": 3,
+      "id": "widget_ui",
+      "status": "hecho",
+      "owner": "agente",
+      "titulo": "Widget Glance 4x2/2x2, worker y caché; assembleDebug",
+      "plan_out": "docs/producto/widget_pronostico/etapa_3_plan.md",
+      "handoff_out": "docs/producto/widget_pronostico/etapa_3_handoff.md"
+    },
+    {
+      "n": 4,
+      "id": "ubicacion_pin",
+      "status": "hecho_con_gaps",
+      "owner": "agente",
+      "titulo": "Ubicación aproximada, pin único, configuración y deep link dentro de la TWA",
+      "plan_out": "docs/producto/widget_pronostico/etapa_4_plan.md",
+      "handoff_out": "docs/producto/widget_pronostico/etapa_4_handoff.md"
+    },
+    {
+      "n": 5,
+      "id": "guia_privacidad",
+      "status": "hecho_con_gaps",
+      "owner": "mixto",
+      "titulo": "Guía de prueba, Data safety y delta de privacidad (humano publica)",
+      "plan_out": "docs/producto/widget_pronostico/etapa_5_plan.md",
+      "handoff_out": "docs/producto/widget_pronostico/etapa_5_handoff.md"
+    },
+    {
+      "n": 6,
+      "id": "cierre_qa",
+      "status": "hecho",
+      "owner": "agente",
+      "titulo": "Releer handoffs, re-medir API y compile, escribir CIERRE.md",
+      "plan_out": "docs/producto/widget_pronostico/etapa_6_plan.md",
+      "handoff_out": "docs/producto/widget_pronostico/etapa_6_handoff.md"
+    }
+  ]
+}

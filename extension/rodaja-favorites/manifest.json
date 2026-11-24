@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "rodaja.cl — Favoritos",
+  "version": "1.0.0",
+  "description": "Acceso r\u00e1pido a tu estaci\u00f3n clim\u00e1tica favorita en rodaja.cl",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Mi estaci\u00f3n rodaja"
+  },
+  "permissions": ["storage", "tabs"],
+  "host_permissions": [
+    "http://localhost:3000/*",
+    "https://rodaja.cl/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "http://localhost:3000/mi-reporte/*",
+        "http://localhost:3000/explorador/*",
+        "https://rodaja.cl/mi-reporte/*",
+        "https://rodaja.cl/explorador/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

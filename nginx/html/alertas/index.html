@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es" class="ra-app">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#DF9531">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="rodaja">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>rodaja.cl &#8212; Alertas clim&#225;ticas</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png?v=20260702fav2">
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png?v=20260702fav2">
+  <link rel="icon" href="/favicon.ico?v=20260702fav2" sizes="any">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=20260702fav2">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="/app/shell.css?v=20261007mon2">
+  <link rel="stylesheet" href="/alertas/styles.css?v=al-rebote1">
+</head>
+<body>
+  <header class="al-header">
+    <p class="al-title">Alertas</p>
+    <nav class="al-nav">
+      <div id="al-auth-bar" class="al-auth-bar"></div>
+    </nav>
+  </header>
+
+  <main id="al-main" class="al-main">
+    <div id="al-gate" class="al-gate" hidden></div>
+    <div id="al-panel" class="al-panel" hidden></div>
+  </main>
+
+  <script src="/alertas/config.js?v=al-digest12"></script>
+  <script src="/rodaja_auth_core.js?v=al-digest12"></script>
+  <script src="/rodaja_pwa.js?v=20261120wsync1"></script>
+  <script src="/alertas/auth.js?v=al-pwa1"></script>
+  <script src="/ec_favorites.js?v=20260830expl7"></script>
+  <script src="/alertas/digest_map.js?v=al-tipo2"></script>
+  <script src="/alertas/digest_view.js?v=al-resumen3"></script>
+  <script src="/alertas/resumen.js?v=al-resumen3"></script>
+  <script src="/alertas/heatmap.js?v=al-heat1"></script>
+  <script src="/alertas/push.js?v=al-gold2"></script>
+  <script src="/alertas/umbrales.js?v=al-umbral1"></script>
+  <script src="/alertas/app.js?v=al-rebote1"></script>
+  <script>
+    (function () {
+      function start() {
+        if (typeof rodajaAlertasBoot !== "function") {
+          var g = document.getElementById("al-gate");
+          if (g) {
+            g.hidden = false;
+            g.innerHTML = "<h1>Panel de alertas</h1><p>No se pudo cargar. Recarga la p\u00e1gina.</p>";
+          }
+          return;
+        }
+        try {
+          var p = rodajaAlertasBoot();
+          if (p && typeof p.catch === "function") {
+            p.catch(function (err) { console.error(err); });
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
+      else start();
+    })();
+  </script>
+</body>
+</html>

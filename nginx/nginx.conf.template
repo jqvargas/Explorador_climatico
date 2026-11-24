@@ -1,0 +1,686 @@
+# Generado en arranque desde docker-entrypoint.sh (envsubst API_KEY + SHINY_AT_ROOT)
+
+# IP real del visitante. Todo el trafico publico entra por cloudflared en el host,
+# asi que sin esto $binary_remote_addr es siempre el gateway de Docker (172.19.0.1)
+# y los limit_req de abajo se convierten en un unico balde global compartido por
+# todos los usuarios y todos los bots: un escaneo deja 429 a gente real.
+set_real_ip_from 172.19.0.0/16;
+real_ip_header CF-Connecting-IP;
+real_ip_recursive on;
+
+# Access log persistente (atribucion de registros, 2026-11-13). Un archivo por dia (UTC) en
+# ./logs/nginx del host (volumen en docker-compose.prod.yml). Sigue tambien en stdout (main).
+# Retencion 90 dias: limpieza en docker-entrypoint.sh.
+map $time_iso8601 $rodaja_log_day {
+    "~^(?<ymd>[0-9]{4}-[0-9]{2}-[0-9]{2})" $ymd;
+    default "sin-fecha";
+}
+log_format rodaja_ref escape=json '$time_iso8601 $remote_addr "$request_method $request_uri" $status $body_bytes_sent '
+                                  '"$http_referer" "$http_user_agent" $http_cf_ipcountry $request_time';
+open_log_file_cache max=8 inactive=60s valid=60s;
+access_log /var/log/nginx/rodaja/access-$rodaja_log_day.log rodaja_ref;
+
+limit_req_zone $binary_remote_addr zone=api_general:10m rate=180r/m;
+limit_req_zone $binary_remote_addr zone=api_heavy:10m rate=10r/m;
+limit_req_zone $binary_remote_addr zone=api_download:10m rate=1r/m;
+
+map $args $shiny_deeplink_key {
+    default "";
+    ~*estacion= $binary_remote_addr;
+}
+limit_req_zone $shiny_deeplink_key zone=shiny_deeplink:10m rate=20r/m;
+# Una carga en frio del Explorador son ~55 peticiones a esta location (medido en
+# el access log). Ya que la clave es por IP real, el limite se dimensiona para que
+# un usuario pueda recargar varias veces sin tocarlo, y aun asi frene escaneos
+# (el que vimos hacia ~12 req/s sostenidos).
+limit_req_zone $binary_remote_addr zone=shiny_general:10m rate=600r/m;
+
+limit_req_status 429;
+
+# Shiny sticky (cookie) — WebSocket exige afinidad a un worker.
+split_clients "${remote_addr}${http_user_agent}" $shiny_route_new {
+    50%     "s1";
+    *       "s2";
+}
+map $cookie_rodaja_shiny $shiny_route {
+    s1      s1;
+    s2      s2;
+    default $shiny_route_new;
+}
+map $shiny_route $shiny_backend {
+    default shiny:3838;
+    s1      shiny:3838;
+    s2      shiny2:3838;
+}
+
+# ?estacion=&reporte=1 era el modal Shiny. No es entrada: Mi reporte sí.
+# Clave reporte:estacion:variable:operador. El primer match gana.
+map $arg_reporte:$arg_estacion:$arg_variable:$arg_operador $rodaja_mi_reporte_from_explorador {
+    default "";
+    ~^1:([1-9][0-9]*):([1-9][0-9]*):([1-9][0-9]*)$ /mi-reporte/?e=$1&v=$2&f=$3;
+    ~^1:([1-9][0-9]*):([1-9][0-9]*):$             /mi-reporte/?e=$1&v=$2;
+    ~^1:([1-9][0-9]*)::([1-9][0-9]*)$             /mi-reporte/?e=$1&f=$2;
+    ~^1:([1-9][0-9]*)::$                          /mi-reporte/?e=$1;
+}
+
+# Primera visita a / (sin query, sin cookie) → Inicio. Deep links se quedan en el Explorador.
+map $cookie_rodaja_home$is_args $rodaja_new_home {
+    default 0;
+    ""      1;
+}
+
+# Última sección (allowlist). Con query string no restaura (el concat no matchea).
+map $cookie_rodaja_last$is_args $rodaja_last_url {
+    default    "";
+    inicio     /mi-reporte/;
+    reporte    /mi-reporte/;
+    alertas    /alertas/;
+    descargar  /descargar/;
+    cuenta     /cuenta/;
+}
+
+# API round-robin (stateless; Redis compartido).
+split_clients "$request_id" $api_pick {
+    50%     "api";
+    *       "api2";
+}
+map $api_pick $api_backend {
+    default api:8000;
+    api     api:8000;
+    api2    api2:8000;
+}
+
+server {
+    listen 80;
+    server_name localhost;
+    root /usr/share/nginx/html;
+    index index.html;
+    # ponytail: origin HTTP :80 detrás de CF; return 302 /path vira Location http://. Techo: cliente HTTP directo al origen ve Location relativa. Si hace falta https absoluto, return 302 https://$host$path en esa location.
+    absolute_redirect off;
+
+    gzip on;
+    gzip_comp_level 5;
+    gzip_types text/plain text/css application/json application/geo+json application/javascript application/manifest+json image/svg+xml;
+
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "geolocation=(self), microphone=()" always;
+
+    # DNS embebido de Docker: re-resuelve api/shiny tras restart de contenedores (evita 502)
+    resolver 127.0.0.11 valid=10s ipv6=off;
+
+__EXPLORADOR_BLOCK__
+
+    location = /sw.js {
+        root /usr/share/nginx/html;
+        default_type application/javascript;
+        expires -1;
+        add_header Cache-Control "no-store";
+        add_header Service-Worker-Allowed "/";
+        access_log off;
+    }
+
+    location = /manifest.webmanifest {
+        root /usr/share/nginx/html;
+        default_type application/manifest+json;
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+        access_log off;
+    }
+
+    location = /favicon.ico {
+        root /usr/share/nginx/html;
+        default_type image/vnd.microsoft.icon;
+        expires 7d;
+        add_header Cache-Control "public";
+        access_log off;
+    }
+
+    location ^~ /icons/ {
+        root /usr/share/nginx/html;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+    }
+
+    # Endpoints pesados: rate limit estricto (sin capturar query string en heavy_path)
+    location ~ ^/api/(?<heavy_path>datos|estaciones/[^/]+/reporte)$ {
+        limit_req zone=api_heavy burst=5 nodelay;
+        proxy_pass http://$api_backend/$heavy_path$is_args$args;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-API-Key ${API_KEY};
+    }
+
+    # Listados livianos. Exacto: un prefijo /^~ /api/estaciones capturaría el reporte.
+    location = /api/estaciones {
+        limit_req zone=api_general burst=40 nodelay;
+        proxy_pass http://$api_backend/estaciones$is_args$args;
+        proxy_http_version 1.1;
+        proxy_connect_timeout 10s;
+        proxy_send_timeout 120s;
+        proxy_read_timeout 60s;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-API-Key ${API_KEY};
+    }
+
+    location = /api/comunas {
+        limit_req zone=api_general burst=40 nodelay;
+        proxy_pass http://$api_backend/comunas$is_args$args;
+        proxy_http_version 1.1;
+        proxy_connect_timeout 10s;
+        proxy_send_timeout 120s;
+        proxy_read_timeout 8s;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-API-Key ${API_KEY};
+    }
+
+    # Descargas bulk: limite por hora
+    location = /api/solicitar-descarga {
+        limit_req zone=api_download burst=2 nodelay;
+        proxy_pass http://$api_backend/solicitar-descarga;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-API-Key ${API_KEY};
+    }
+
+    location /api/ {
+        limit_req zone=api_general burst=40 nodelay;
+        rewrite ^/api/?(.*)$ /$1 break;
+        proxy_pass http://$api_backend;
+        proxy_http_version 1.1;
+        proxy_connect_timeout 10s;
+        proxy_send_timeout 120s;
+        proxy_read_timeout 120s;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-API-Key ${API_KEY};
+    }
+
+    location = /api/webhooks/clerk {
+        proxy_pass http://$api_backend/webhooks/clerk;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-API-Key ${API_KEY};
+    }
+
+    location = /api/webhooks/stripe {
+        proxy_pass http://$api_backend/webhooks/stripe;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-API-Key ${API_KEY};
+    }
+
+    location = /api/webhooks/flow {
+        proxy_pass http://$api_backend/webhooks/flow;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-API-Key ${API_KEY};
+    }
+
+    location = /api/webhooks/flow/register {
+        proxy_pass http://$api_backend/webhooks/flow/register;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-API-Key ${API_KEY};
+    }
+
+    location = /precios {
+        return 302 /precios/;
+    }
+    location ^~ /precios/ {
+        ssi on;
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /precios/index.html;
+    }
+
+    location = /formulario {
+        return 302 /formulario/;
+    }
+    location ^~ /formulario/ {
+        ssi on;
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /formulario/index.html;
+    }
+
+    location = /cuenta {
+        return 302 /cuenta/;
+    }
+    location ^~ /cuenta/ {
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /cuenta/index.html;
+    }
+
+    location = /monitoreo {
+        return 302 /monitoreo/;
+    }
+    location ^~ /monitoreo/ {
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /monitoreo/index.html;
+    }
+
+    location = /app {
+        return 302 /mi-reporte/;
+    }
+    location = /app/index.html {
+        return 302 /mi-reporte/$is_args$args;
+    }
+    location = /app/ {
+        return 302 /mi-reporte/$is_args$args;
+    }
+    location ^~ /app/ {
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /app/index.html;
+    }
+
+    location = /mi-reporte/sw.js {
+        root /usr/share/nginx/html;
+        default_type application/javascript;
+        expires -1;
+        add_header Cache-Control "no-store";
+        access_log off;
+    }
+
+    location = /mi-reporte {
+        return 302 /mi-reporte/;
+    }
+    # ponytail: legado PWA scoped; HTML ya usa /manifest.webmanifest. Location exacta gana a ^~ try_files (si no, 200 HTML).
+    location = /mi-reporte/manifest.json {
+        return 410;
+    }
+    location ^~ /mi-reporte/ {
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /mi-reporte/index.html;
+    }
+
+    location = /descargar {
+        return 302 /descargar/index.html$is_args$args;
+    }
+    location = /descargar/ {
+        return 302 /descargar/index.html$is_args$args;
+    }
+    location ^~ /descargar/ {
+        ssi on;
+        root /usr/share/nginx/html;
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+        try_files $uri $uri/ /descargar/index.html;
+    }
+
+    location = /alertas {
+        return 302 /alertas/index.html$is_args$args;
+    }
+    location = /alertas/ {
+        return 302 /alertas/index.html$is_args$args;
+    }
+    location ^~ /alertas/ {
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /alertas/index.html;
+    }
+
+    location ^~ /geo/ {
+        root /usr/share/nginx/html;
+        types {
+            application/geo+json geojson;
+            image/png png;
+            image/svg+xml svg;
+        }
+        default_type application/geo+json;
+        expires 7d;
+        add_header Cache-Control "public, max-age=604800";
+        try_files $uri =404;
+    }
+
+    location = /registro_descargas {
+        return 302 /registro_descargas/;
+    }
+    location ^~ /registro_descargas/ {
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /registro_descargas/index.html;
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    location = /profiler {
+        return 302 /profiler/;
+    }
+    location ^~ /profiler/ {
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /profiler/index.html;
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    location = /app_profiler {
+        return 302 /app_profiler/;
+    }
+    location ^~ /app_profiler/ {
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /app_profiler/index.html;
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    location = /roadmap {
+        return 302 /roadmap/;
+    }
+    location ^~ /roadmap/ {
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /roadmap/index.html;
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    location = /planta {
+        return 302 /planta/;
+    }
+    location ^~ /planta/ {
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /planta/index.html;
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    location = /google_analytics {
+        return 302 /google_analytics/;
+    }
+    location ^~ /google_analytics/ {
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /google_analytics/index.html;
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    location = /admin {
+        return 302 /admin/;
+    }
+    location ^~ /admin/ {
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /admin/index.html;
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    location = /alertas_concordancia {
+        return 302 /pronostico_precision/;
+    }
+    location ^~ /alertas_concordancia/ {
+        return 302 /pronostico_precision/;
+    }
+
+    location = /pronostico_precision {
+        return 302 /pronostico_precision/;
+    }
+    location ^~ /pronostico_precision/ {
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /pronostico_precision/index.html;
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    location = /acerca {
+        return 302 /acerca/;
+    }
+    location ^~ /acerca/ {
+        ssi on;
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /acerca/index.html;
+    }
+
+    location = /sobre-rodaja {
+        return 302 /sobre-rodaja/;
+    }
+    location ^~ /sobre-rodaja/ {
+        ssi on;
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /sobre-rodaja/index.html;
+    }
+
+    # /inicio/ ya no se muestra (decision de Javier, 2026-11-18): 301 a Mi reporte, con query.
+    location = /inicio {
+        return 301 https://app.rodaja.cl/$is_args$args;
+    }
+    location ^~ /inicio/ {
+        return 301 https://app.rodaja.cl/$is_args$args;
+    }
+
+    location ^~ /datos/ {
+        ssi on;
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ =404;
+        expires 1h;
+        add_header Cache-Control "public, max-age=3600, stale-while-revalidate=86400";
+    }
+
+    location = /legal {
+        return 302 /legal/privacidad/;
+    }
+    location ^~ /legal/ {
+        ssi on;
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ =404;
+    }
+
+    location = /robots.txt {
+        root /usr/share/nginx/html;
+        default_type text/plain;
+        access_log off;
+    }
+
+    # Search Console HTML file (no va a Shiny en /)
+    location = /googlec2fc318c6bb57409.html {
+        root /usr/share/nginx/html;
+        default_type text/html;
+        charset utf-8;
+        access_log off;
+        expires -1;
+        add_header Cache-Control "no-store";
+    }
+
+    location = /llms.txt {
+        root /usr/share/nginx/html;
+        default_type text/plain;
+        charset utf-8;
+        access_log off;
+        expires 1h;
+        add_header Cache-Control "public, max-age=3600";
+    }
+
+    location ^~ /ia/ {
+        root /usr/share/nginx/html;
+        charset utf-8;
+        try_files $uri $uri/ =404;
+        expires 1h;
+        add_header Cache-Control "public, max-age=3600, stale-while-revalidate=86400";
+    }
+
+    location = /sitemap.xml {
+        root /usr/share/nginx/html;
+        default_type application/xml;
+        access_log off;
+    }
+
+    location = /ads.txt {
+        root /usr/share/nginx/html;
+        default_type text/plain;
+        access_log off;
+    }
+
+    location ^~ /analytics/ {
+        root /usr/share/nginx/html;
+        expires 1h;
+        add_header Cache-Control "public";
+    }
+
+    location ^~ /_partials/ {
+        internal;
+    }
+
+    location = /rodaja_pwa.js {
+        root /usr/share/nginx/html;
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    location = /rodaja_auth_core.js {
+        root /usr/share/nginx/html;
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    location = /rodaja-config.js {
+        root /usr/share/nginx/html;
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    location ~* ^/(mi-reporte|cuenta|precios|app)/.*\.(css|js|ico|png|jpg|jpeg|gif|svg|woff|woff2|webmanifest|json)$ {
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    location ~* ^/descargar/.*\.(css|js)$ {
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    location ~* ^/alertas/.*\.(css|js)$ {
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    location ~* ^/registro_descargas/.*\.(css|js)$ {
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    location ~* ^/profiler/.*\.(css|js)$ {
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    location ~* ^/app_profiler/.*\.(css|js)$ {
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    location ~* ^/roadmap/.*\.(css|js)$ {
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    location ~* ^/planta/.*\.(css|js)$ {
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+
+    location ~* ^/google_analytics/.*\.(css|js)$ {
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    location ~* ^/admin/.*\.(css|js)$ {
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    location ~* ^/pronostico_precision/.*\.(css|js)$ {
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    location = /panorama {
+        return 302 /?capa=icon;
+    }
+
+    location = /panorama/data/current.json {
+        alias /data/panorama/current.json;
+        default_type application/json;
+        expires 5m;
+        add_header Cache-Control "public, max-age=300, must-revalidate";
+    }
+    location = /panorama/data/previous.json {
+        alias /data/panorama/previous.json;
+        default_type application/json;
+        expires 5m;
+        add_header Cache-Control "public, max-age=300, must-revalidate";
+    }
+    location ^~ /panorama/data/runs/ {
+        alias /data/panorama/runs/;
+        expires 1d;
+        add_header Cache-Control "public, max-age=86400";
+    }
+    location ^~ /panorama/data/lib/ {
+        alias /data/panorama/lib/;
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000";
+    }
+    location ^~ /panorama/data/ {
+        return 404;
+    }
+
+    location ^~ /panorama/ {
+        return 302 /?capa=icon;
+    }
+
+    location = /alertas-red {
+        return 302 /?capa=alertas;
+    }
+
+    location ^~ /alertas-red/ {
+        return 302 /?capa=alertas;
+    }
+
+    # Digital Asset Links (TWA). ^~ evita el catch-all Shiny (404 HTML + cookie).
+    location ^~ /.well-known/ {
+        root /usr/share/nginx/html;
+        default_type application/json;
+        types { application/json json; }
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate" always;
+        add_header Access-Control-Allow-Origin "*" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        try_files $uri =404;
+    }
+
+
+    # 2026-11-23: Google a veces muestra la ficha sin el prefijo /datos/estacion/ y cae en el catch-all de Shiny (404).
+    # Solo esta ruta exacta (con y sin barra); no se aplica una regla generica /<slug>-<id> para no interceptar otras rutas de la app.
+    location = /rio-mapocho-en-los-almendros-1267 {
+        return 301 https://app.rodaja.cl/datos/estacion/rio-mapocho-en-los-almendros-1267/;
+    }
+    location = /rio-mapocho-en-los-almendros-1267/ {
+        return 301 https://app.rodaja.cl/datos/estacion/rio-mapocho-en-los-almendros-1267/;
+    }
+
+__ROOT_BLOCK__
+}

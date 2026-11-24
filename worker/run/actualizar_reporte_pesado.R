@@ -1,0 +1,61 @@
+#!/usr/bin/env Rscript
+# PAUSA: el PDF por estacion esta detenido mientras se construye el Reporte personalizado
+# (docs/producto/PLAN_REPORTE_PERSONALIZADO.md). Se reactiva con REPORTE_PDF_HABILITADO=1.
+if (!identical(trimws(Sys.getenv("REPORTE_PDF_HABILITADO", "0")), "1")) {
+  message("[reporte-pdf] en pausa (REPORTE_PDF_HABILITADO != 1); no se genera nada.")
+  quit(save = "no", status = 0)
+}
+# Ciclo lento: Mann-Kendall, re-ajuste SPI, ENSO.
+
+locate_worker_root <- function() {
+  fa <- grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
+  run_dir <- normalizePath(dirname(sub("^--file=", "", fa[1])), winslash = "/", mustWork = FALSE)
+  cand_app <- normalizePath(file.path(run_dir, ".."), winslash = "/", mustWork = FALSE)
+  if (file.exists(file.path(cand_app, "utils", "worker_bootstrap.R"))) return(cand_app)
+  cand_repo <- normalizePath(file.path(run_dir, "..", ".."), winslash = "/", mustWork = FALSE)
+  if (file.exists(file.path(cand_repo, "worker", "utils", "worker_bootstrap.R"))) {
+    return(file.path(cand_repo, "worker"))
+  }
+  stop("No se encuentra worker/utils/worker_bootstrap.R")
+}
+
+worker_root <- locate_worker_root()
+repo_root <- if (dir.exists(file.path(dirname(worker_root), "api"))) dirname(worker_root) else worker_root
+
+source(file.path(worker_root, "utils", "worker_bootstrap.R"))
+source(file.path(worker_root, "utils", "db.R"))
+source(file.path(worker_root, "utils", "reporte_storage.R"))
+source(file.path(worker_root, "utils", "reporte_db.R"))
+source(file.path(worker_root, "utils", "reporte_metricas.R"))
+source(file.path(worker_root, "utils", "reporte_sections.R"))
+source(file.path(worker_root, "utils", "md2pdf.R"))
+source(file.path(worker_root, "utils", "reporte_pipeline.R"))
+
+worker_bootstrap_env(repo_root)
+roots <- worker_resolve_data_roots(repo_root)
+reporte_bootstrap_api_utils(roots$api)
+
+args <- commandArgs(trailingOnly = TRUE)
+eids_arg <- NULL
+for (a in args) {
+  if (grepl("^--eid=", a)) eids_arg <- c(eids_arg, as.integer(sub("^--eid=", "", a)))
+}
+
+tryCatch({
+  conn <- get_db_connection()
+  on.exit(tryCatch(DBI::dbDisconnect(conn), error = function(e) NULL), add = TRUE)
+  if (!reporte_tabla_existe(conn)) stop("Falta la tabla ficha_del_mirador")
+
+  eids <- if (!is.null(eids_arg) && length(eids_arg) > 0) eids_arg else reporte_db_list_activos(conn)
+  message("[reporte-pesado] estaciones=", length(eids))
+  for (eid in eids) {
+    res <- tryCatch(reporte_pipeline_heavy(conn, eid), error = function(e) {
+      list(ok = FALSE, error = conditionMessage(e))
+    })
+    if (isTRUE(res$ok)) reporte_log_timing("pesado", eid, res$seconds)
+  }
+  message("[reporte-pesado] OK")
+}, error = function(e) {
+  message("[reporte-pesado] ERROR: ", conditionMessage(e))
+  quit(status = 1)
+})

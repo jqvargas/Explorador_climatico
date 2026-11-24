@@ -1,0 +1,46 @@
+# Override de produccion: un solo punto de entrada publico (nginx).
+# Uso: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Requiere .env en el servidor con API_KEY, POSTGRES_PASSWORD, ALLOWED_ORIGINS, etc.
+
+services:
+  api:
+    ports: !reset []
+
+  api2:
+    ports: !reset []
+
+  shiny:
+    ports: !reset []
+
+  shiny2:
+    ports: !reset []
+
+  nginx:
+    env_file:
+      - .env
+    environment:
+      - API_KEY=${API_KEY}
+      - CARTO_BASEMAP_KEY=${CARTO_BASEMAP_KEY:-}
+      - SHINY_AT_ROOT=1
+    # Access log persistente (atribucion de registros 2026-11-13): sobrevive a reinicios.
+    volumes:
+      - ./logs/nginx:/var/log/nginx/rodaja
+    # stdout de nginx con tope de tamano (antes sin limite).
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+    ports:
+      - "80:80"
+      - "3838:80"
+    depends_on:
+      api:
+        condition: service_healthy
+      api2:
+        condition: service_healthy
+      shiny:
+        condition: service_started
+      shiny2:
+        condition: service_started

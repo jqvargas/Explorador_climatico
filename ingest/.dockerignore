@@ -1,0 +1,5 @@
+# El Dockerfile no copia codigo (se monta como volumen), por lo que solo
+# importa reducir el contexto de build.
+logs/
+staging/
+**/*.log

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:id="@+id/widget_onboarding_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/widget_onboarding_title"
+            android:textColor="#111111"
+            android:textSize="22sp" />
+
+        <TextView
+            android:id="@+id/widget_onboarding_body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/widget_onboarding_body"
+            android:textColor="#111111"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/widget_onboarding_continue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/widget_onboarding_continue" />
+
+        <Button
+            android:id="@+id/widget_onboarding_open"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/widget_onboarding_open"
+            android:visibility="gone" />
+    </LinearLayout>
+</ScrollView>

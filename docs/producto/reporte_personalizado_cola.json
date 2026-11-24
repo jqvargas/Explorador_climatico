@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "objetivo": "Reemplazar el Reporte PDF por estacion por el Reporte personalizado: seccion nueva en la app donde el usuario elige punto o area, confirma estaciones y recibe un PDF inmutable verificable por QR.",
+  "plan": "docs/producto/PLAN_REPORTE_PERSONALIZADO.md",
+  "prompt": "docs/producto/reporte_personalizado_PROMPT_FIJO.md",
+  "criterios": "docs/producto/reporte_personalizado/criterios.md",
+  "notas": "Un agente a la vez. N exige N-1 hecho o hecho_con_gaps. La etapa 0 la cierra el operador (decisiones D1-D7). 2026-11-24: PostGIS en la BD y sf en api/worker instalados; PDF por estacion en pausa (REPORTE_PDF_HABILITADO). D1 decidida.",
+  "status_significado": {
+    "pendiente": "Nadie la reclamo.",
+    "en_curso": "Agente vivo escribiendo plan o codigo.",
+    "hecho": "DoD cerrada; handoff escrito.",
+    "hecho_con_gaps": "Cerrada con gaps listados en el handoff.",
+    "bloqueado": "Falta decision o prerequisito. Motivo en handoff. No implementar a ciegas."
+  },
+  "etapas": [
+    { "n": 0, "id": "decisiones", "status": "pendiente", "owner": "operador", "titulo": "Cerrar decisiones D1-D7 del plan maestro", "plan_out": null, "handoff_out": null },
+    { "n": 1, "id": "base_geo", "status": "pendiente", "owner": "agente", "titulo": "Base geoespacial: mirador.geom, capas geo en PostGIS, api/utils/geo.R", "plan_out": "docs/producto/reporte_personalizado/etapa_1_plan.md", "handoff_out": "docs/producto/reporte_personalizado/etapa_1_handoff.md" },
+    { "n": 2, "id": "api_solicitud", "status": "pendiente", "owner": "agente", "titulo": "Tablas reporte_solicitud y endpoints previsualizar/crear/estado/descarga", "plan_out": "docs/producto/reporte_personalizado/etapa_2_plan.md", "handoff_out": "docs/producto/reporte_personalizado/etapa_2_handoff.md" },
+    { "n": 3, "id": "pipeline", "status": "pendiente", "owner": "agente", "titulo": "Pipeline worker multiestacion con snapshot, hash y plantilla general", "plan_out": "docs/producto/reporte_personalizado/etapa_3_plan.md", "handoff_out": "docs/producto/reporte_personalizado/etapa_3_handoff.md" },
+    { "n": 4, "id": "ui_seccion", "status": "pendiente", "owner": "agente", "titulo": "Seccion /reporte-personalizado/ en el NAV principal", "plan_out": "docs/producto/reporte_personalizado/etapa_4_plan.md", "handoff_out": "docs/producto/reporte_personalizado/etapa_4_handoff.md" },
+    { "n": 5, "id": "verificacion", "status": "pendiente", "owner": "agente", "titulo": "Verificacion publica por codigo y QR", "plan_out": "docs/producto/reporte_personalizado/etapa_5_plan.md", "handoff_out": "docs/producto/reporte_personalizado/etapa_5_handoff.md" },
+    { "n": 6, "id": "plantilla_seia", "status": "pendiente", "owner": "agente", "titulo": "Plantilla SEIA (bloquea si faltan prerrequisitos P0)", "plan_out": "docs/producto/reporte_personalizado/etapa_6_plan.md", "handoff_out": "docs/producto/reporte_personalizado/etapa_6_handoff.md" },
+    { "n": 7, "id": "retiro", "status": "pendiente", "owner": "agente", "titulo": "Redirigir el PDF por estacion y congelar el job mensual", "plan_out": "docs/producto/reporte_personalizado/etapa_7_plan.md", "handoff_out": "docs/producto/reporte_personalizado/etapa_7_handoff.md" },
+    { "n": 8, "id": "cierre", "status": "pendiente", "owner": "agente", "titulo": "Corrida completa y CIERRE.md", "plan_out": "docs/producto/reporte_personalizado/etapa_8_plan.md", "handoff_out": "docs/producto/reporte_personalizado/CIERRE.md" }
+  ]
+}

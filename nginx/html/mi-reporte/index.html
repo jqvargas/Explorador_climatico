@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es" class="ra-app">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#DF9531">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="rodaja">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>rodaja.cl &#8212; Mi reporte</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png?v=20260702fav2">
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png?v=20260702fav2">
+  <link rel="icon" href="/favicon.ico?v=20260702fav2" sizes="any">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=20260702fav2">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <!-- El CSS bloqueante viene de cuatro origenes distintos: abrir DNS/TLS antes
+       de que el parser llegue a cada <link> ahorra un round-trip por origen. -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+  <link rel="stylesheet" href="/app/shell.css?v=20261007mon2">
+  <link rel="stylesheet" href="/app/styles.css?v=20260926mon1">
+  <link rel="stylesheet" href="styles.css?v=20261116pin1">
+  <script>
+    try {
+      var _q = new URLSearchParams(location.search);
+      var _cambiar = _q.get("cambiar") === "1";
+      var _hasE = !!_q.get("e");
+      var _twa = false;
+      try {
+        if (sessionStorage.getItem("rodaja_twa") === "1" || _q.get("twa_boot") === "1" ||
+            (document.referrer || "").indexOf("android-app://cl.rodaja.app") === 0) {
+          sessionStorage.setItem("rodaja_twa", "1");
+          _twa = localStorage.getItem("rodaja_twa_onboarded_v1") !== "1";
+        }
+      } catch (eTwa) { _twa = false; }
+      var _store = JSON.parse(localStorage.getItem("rodaja_favorites_v1") || "null");
+      var _fav = (_store && _store.primary && _store.primary.eid)
+        ? _store.primary
+        : JSON.parse(localStorage.getItem("rodaja_app_reporte_v1") || "null");
+      var _ua = navigator.userAgent || "";
+      var _short = Math.min(screen.width, screen.height);
+      if (/Android/i.test(_ua) && _short > 0 && _short <= 900) {
+        document.documentElement.classList.add("ra-android-phone");
+      }
+      var _viewPron = _q.get("view") === "pronostico";
+      if (_cambiar || (!(_viewPron && _hasE) && (_twa || ((!_fav || !_fav.eid) && !_hasE)))) {
+        document.documentElement.classList.add("ra-need-station");
+      }
+    } catch (e) { /* ignore */ }
+  </script>
+  <link rel="stylesheet" href="reporte_widgets.css?v=20261026hoy1">
+  <link rel="stylesheet" href="reporte_print.css?v=20261010hist2">
+</head>
+<body>
+  <main class="ra-home" id="ra-home">
+    <a class="ra-pin-widget" href="intent://pin#Intent;scheme=rodaja;package=cl.rodaja.app;end">Poner en el inicio de pantalla</a>
+    <h1 class="ra-hello">El clima y el agua de tu estaci&oacute;n, en un reporte</h1>
+    <p class="ra-home-lead">
+      <span><i class="ra-dot" aria-hidden="true"></i>Datos DGA y DMC</span>
+      <span>Sin crear cuenta</span>
+    </p>
+    <div class="ra-home-grid">
+      <section class="ra-home-card" id="ra-home-pick" aria-labelledby="ra-pick-heading">
+        <div id="ra-station-picker"></div>
+      </section>
+      <aside class="ra-home-card ra-home-val" aria-label="Por qu&eacute; usar rodaja.cl">
+        <span class="ra-home-eyebrow">Hidroclimatolog&iacute;a de Chile</span>
+        <h3>Datos reales y alertas previstas para anticiparte al clima extremo</h3>
+        <div class="ra-home-viz">
+          <svg class="ra-home-dots" viewBox="0 0 88 300" role="img" aria-label="Estaciones de monitoreo a lo largo de Chile">
+            <circle class="ra-home-dot-b" cx="36.7" cy="8" r="1.6"/><circle class="ra-home-dot-b" cx="44.7" cy="8" r="1.6"/><circle class="ra-home-dot-s" cx="52.7" cy="8" r="2.6"/><circle class="ra-home-dot-b" cx="37.5" cy="16" r="1.6"/><circle class="ra-home-dot-b" cx="45.5" cy="16" r="1.6"/><circle class="ra-home-dot-b" cx="53.5" cy="16" r="1.6"/><circle class="ra-home-dot-s" cx="38.2" cy="24" r="2.6"/><circle class="ra-home-dot-b" cx="46.2" cy="24" r="1.6"/><circle class="ra-home-dot-b" cx="54.2" cy="24" r="1.6"/><circle class="ra-home-dot-b" cx="38.9" cy="32" r="1.6"/><circle class="ra-home-dot-b" cx="46.9" cy="32" r="1.6"/><circle class="ra-home-dot-b" cx="54.9" cy="32" r="1.6"/><circle class="ra-home-dot-b" cx="39.6" cy="40" r="1.6"/><circle class="ra-home-dot-s" cx="47.6" cy="40" r="2.6"/><circle class="ra-home-dot-b" cx="55.6" cy="40" r="1.6"/><circle class="ra-home-dot-b" cx="40.2" cy="48" r="1.6"/><circle class="ra-home-dot-b" cx="48.2" cy="48" r="1.6"/><circle class="ra-home-dot-s" cx="56.2" cy="48" r="2.6"/><circle class="ra-home-dot-b" cx="40.8" cy="56" r="1.6"/><circle class="ra-home-dot-b" cx="48.8" cy="56" r="1.6"/><circle class="ra-home-dot-s" cx="56.8" cy="56" r="2.6"/><circle class="ra-home-dot-s" cx="41.3" cy="64" r="2.6"/><circle class="ra-home-dot-b" cx="49.3" cy="64" r="1.6"/><circle class="ra-home-dot-b" cx="57.3" cy="64" r="1.6"/><circle class="ra-home-dot-s" cx="41.7" cy="72" r="2.6"/><circle class="ra-home-dot-b" cx="49.7" cy="72" r="1.6"/><circle class="ra-home-dot-b" cx="57.7" cy="72" r="1.6"/><circle class="ra-home-dot-s" cx="42.1" cy="80" r="2.6"/><circle class="ra-home-dot-b" cx="50.1" cy="80" r="1.6"/><circle class="ra-home-dot-b" cx="58.1" cy="80" r="1.6"/><circle class="ra-home-dot-b" cx="42.5" cy="88" r="1.6"/><circle class="ra-home-dot-b" cx="50.5" cy="88" r="1.6"/><circle class="ra-home-dot-s" cx="58.5" cy="88" r="2.6"/><circle class="ra-home-dot-b" cx="42.7" cy="96" r="1.6"/><circle class="ra-home-dot-b" cx="50.7" cy="96" r="1.6"/><circle class="ra-home-dot-b" cx="58.7" cy="96" r="1.6"/><circle class="ra-home-dot-b" cx="42.9" cy="104" r="1.6"/><circle class="ra-home-dot-b" cx="50.9" cy="104" r="1.6"/><circle class="ra-home-dot-s" cx="58.9" cy="104" r="2.6"/><circle class="ra-home-dot-b" cx="43.0" cy="112" r="1.6"/><circle class="ra-home-dot-b" cx="51.0" cy="112" r="1.6"/><circle class="ra-home-dot-b" cx="59.0" cy="112" r="1.6"/><circle class="ra-home-dot-s" cx="43.0" cy="120" r="2.6"/><circle class="ra-home-dot-b" cx="51.0" cy="120" r="1.6"/><circle class="ra-home-dot-b" cx="59.0" cy="120" r="1.6"/><circle class="ra-home-dot-b" cx="42.9" cy="128" r="1.6"/><circle class="ra-home-dot-b" cx="50.9" cy="128" r="1.6"/><circle class="ra-home-dot-b" cx="58.9" cy="128" r="1.6"/><circle class="ra-home-dot-b" cx="42.8" cy="136" r="1.6"/><circle class="ra-home-dot-b" cx="50.8" cy="136" r="1.6"/><circle class="ra-home-dot-b" cx="58.8" cy="136" r="1.6"/><circle class="ra-home-dot-b" cx="42.6" cy="144" r="1.6"/><circle class="ra-home-dot-s" cx="50.6" cy="144" r="2.6"/><circle class="ra-home-dot-b" cx="58.6" cy="144" r="1.6"/><circle class="ra-home-dot-b" cx="42.3" cy="152" r="1.6"/><circle class="ra-home-dot-s" cx="50.3" cy="152" r="2.6"/><circle class="ra-home-dot-s" cx="58.3" cy="152" r="2.6"/><circle class="ra-home-dot-b" cx="41.9" cy="160" r="1.6"/><circle class="ra-home-dot-b" cx="49.9" cy="160" r="1.6"/><circle class="ra-home-dot-b" cx="57.9" cy="160" r="1.6"/><circle class="ra-home-dot-b" cx="41.5" cy="168" r="1.6"/><circle class="ra-home-dot-b" cx="49.5" cy="168" r="1.6"/><circle class="ra-home-dot-b" cx="57.5" cy="168" r="1.6"/><circle class="ra-home-dot-b" cx="41.0" cy="176" r="1.6"/><circle class="ra-home-dot-b" cx="49.0" cy="176" r="1.6"/><circle class="ra-home-dot-b" cx="57.0" cy="176" r="1.6"/><circle class="ra-home-dot-b" cx="40.4" cy="184" r="1.6"/><circle class="ra-home-dot-b" cx="48.4" cy="184" r="1.6"/><circle class="ra-home-dot-b" cx="56.4" cy="184" r="1.6"/><circle class="ra-home-dot-b" cx="39.8" cy="192" r="1.6"/><circle class="ra-home-dot-b" cx="47.8" cy="192" r="1.6"/><circle class="ra-home-dot-s" cx="55.8" cy="192" r="2.6"/><circle class="ra-home-dot-b" cx="39.2" cy="200" r="1.6"/><circle class="ra-home-dot-b" cx="47.2" cy="200" r="1.6"/><circle class="ra-home-dot-b" cx="55.2" cy="200" r="1.6"/><circle class="ra-home-dot-b" cx="38.5" cy="208" r="1.6"/><circle class="ra-home-dot-b" cx="46.5" cy="208" r="1.6"/><circle class="ra-home-dot-b" cx="54.5" cy="208" r="1.6"/><circle class="ra-home-dot-b" cx="37.8" cy="216" r="1.6"/><circle class="ra-home-dot-b" cx="45.8" cy="216" r="1.6"/><circle class="ra-home-dot-b" cx="53.8" cy="216" r="1.6"/><circle class="ra-home-dot-s" cx="37.1" cy="224" r="2.6"/><circle class="ra-home-dot-b" cx="45.1" cy="224" r="1.6"/><circle class="ra-home-dot-b" cx="53.1" cy="224" r="1.6"/><circle class="ra-home-dot-b" cx="36.3" cy="232" r="1.6"/><circle class="ra-home-dot-b" cx="44.3" cy="232" r="1.6"/><circle class="ra-home-dot-b" cx="52.3" cy="232" r="1.6"/><circle class="ra-home-dot-b" cx="35.6" cy="240" r="1.6"/><circle class="ra-home-dot-b" cx="43.6" cy="240" r="1.6"/><circle class="ra-home-dot-b" cx="51.6" cy="240" r="1.6"/><circle class="ra-home-dot-s" cx="38.8" cy="248" r="2.6"/><circle class="ra-home-dot-b" cx="46.8" cy="248" r="1.6"/><circle class="ra-home-dot-b" cx="38.1" cy="256" r="1.6"/><circle class="ra-home-dot-b" cx="46.1" cy="256" r="1.6"/><circle class="ra-home-dot-s" cx="37.4" cy="264" r="2.6"/><circle class="ra-home-dot-b" cx="45.4" cy="264" r="1.6"/><circle class="ra-home-dot-b" cx="36.7" cy="272" r="1.6"/><circle class="ra-home-dot-b" cx="44.7" cy="272" r="1.6"/><circle class="ra-home-dot-b" cx="36.1" cy="280" r="1.6"/><circle class="ra-home-dot-b" cx="44.1" cy="280" r="1.6"/><circle class="ra-home-dot-s" cx="35.5" cy="288" r="2.6"/><circle class="ra-home-dot-b" cx="43.5" cy="288" r="1.6"/>
+          </svg>
+          <div class="ra-home-col">
+            <div class="ra-home-mini">
+              <small class="ra-home-cap">Datos oficiales, depurados</small>
+              <svg class="ra-home-cmp" viewBox="0 0 200 70" preserveAspectRatio="none" role="img" aria-label="Serie cruda con saltos frente a serie depurada">
+                <polyline points="0,40 20,38 40,8 50,40 70,36 90,66 100,34 120,30 140,10 150,32 180,28 200,30" fill="none" stroke="#7C8698" stroke-width="1.6" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>
+                <polyline points="0,38 30,37 60,36 90,34 120,31 150,30 180,29 200,29" fill="none" stroke="var(--ra-brand, #DF9531)" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+              </svg>
+              <div class="ra-home-leg"><span><i class="ra-home-leg-raw"></i>Crudo</span><span><i class="ra-home-leg-ok"></i>Depurado</span></div>
+            </div>
+            <a class="ra-home-mini ra-home-mini-row" href="/explorador/">
+              <svg class="ra-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg>
+              <span><b>Explorador en mapa</b><small>Compara estaciones de todo Chile</small></span>
+            </a>
+          </div>
+        </div>
+        <section class="ra-home-alert" aria-labelledby="ra-home-al">
+          <div class="ra-home-alert-hd">
+            <span class="ra-home-alert-ic" aria-hidden="true">
+              <svg class="ra-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+            </span>
+            <div>
+              <span class="ra-home-tag2">Nuestro diferencial</span>
+              <h4 id="ra-home-al">Alertas previstas de eventos extremos</h4>
+            </div>
+          </div>
+          <p>Prep&aacute;rate antes del evento y evita da&ntilde;os y p&eacute;rdidas.</p>
+          <ol class="ra-home-steps">
+            <li><b>Downscaling de modelos</b>Pron&oacute;stico a escala local, no solo regional.</li>
+            <li><b>Correcci&oacute;n de sesgo continua</b>Ajustada con lo observado en las estaciones.</li>
+            <li><b>Alerta con anticipaci&oacute;n</b>Con tiempo para actuar.</li>
+          </ol>
+          <a class="ra-home-lnk" href="/alertas/">Activar alertas con mi cuenta &rarr;</a>
+        </section>
+        <div class="ra-home-who"><small>&Uacute;til para</small><span>Agricultura</span><span>Energ&iacute;a</span><span>Municipios</span><span>Emergencias</span></div>
+      </aside>
+    </div>
+    <div class="ra-dd" id="ra-station-dd" hidden>
+      <button type="button" class="ra-dd-trigger" id="ra-dd-btn" aria-expanded="false" aria-haspopup="true" aria-controls="ra-dd-panel" hidden></button>
+      <span class="ra-dd-value" id="ra-dd-value" hidden>Elegir</span>
+      <div class="ra-dd-panel" id="ra-dd-panel" hidden>
+        <div id="ra-dd-recents"></div>
+        <div id="ra-dd-wiz"></div>
+      </div>
+    </div>
+  </main>
+
+  <div class="mr-app-chrome" id="mr-app-chrome">
+  <a class="ra-pin-widget" href="intent://pin#Intent;scheme=rodaja;package=cl.rodaja.app;end">Poner en el inicio de pantalla</a>
+  <div class="mr-station-bar">
+    <div class="mr-station-bar-copy">
+      <p class="mr-station-bar-kicker">Estaci&oacute;n de este reporte</p>
+      <h1 class="mr-station-bar-name" id="mr-station-bar-name">Su estaci&oacute;n</h1>
+    </div>
+    <a class="mr-change-station" id="mr-btn-config" href="/mi-reporte/?cambiar=1">Cambiar estaci&oacute;n</a>
+  </div>
+  <header class="mr-header">
+    <h1 class="mr-title">Mi reporte</h1>
+    <nav class="mr-nav">
+      <div id="mr-auth-bar" class="mr-auth-bar"></div>
+      <button type="button" id="mr-btn-historico" class="mr-btn" hidden>Volver al reporte</button>
+    </nav>
+  </header>
+
+  <main id="mr-main" class="mr-main">
+    <div id="mr-loading" class="mr-loading" hidden>Cargando reporte&hellip;</div>
+    <div id="mr-wizard" class="mr-wizard" hidden></div>
+    <div id="mr-report" class="ec-reporte-contenido" hidden></div>
+  </main>
+  </div>
+
+  <!-- defer: se descargan en paralelo sin bloquear el parser y se ejecutan en
+       orden antes de DOMContentLoaded, que es donde app.js arranca. -->
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script defer src="/rodaja-config.js"></script>
+  <script defer src="/rodaja_auth_core.js?v=20260830canon1"></script>
+  <script defer src="/rodaja_pwa.js?v=20261120wsync1"></script>
+  <script defer src="favorites.js?v=20260830fav1"></script>
+  <script defer src="auth.js?v=20260830fav1"></script>
+  <script defer src="reporte_pronostico.js?v=20261026hoy1"></script>
+  <script defer src="reporte_widgets.js?v=20261026hoy1"></script>
+  <script defer src="reporte.js?v=20261010pp4"></script>
+  <script defer src="reporte_export.js?v=20261011csv1"></script>
+  <script defer src="/app/station_label.js?v=20260924audit2"></script>
+  <script defer src="/alertas/push.js?v=al-push3"></script>
+  <script defer src="/app/station-picker.js?v=20261013fix1"></script>
+  <script defer src="/app/app.js?v=20260923nav1"></script>
+  <script defer src="app.js?v=20261026hoy1"></script>
+</body>
+</html>

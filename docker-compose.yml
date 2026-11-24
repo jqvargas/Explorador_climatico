@@ -1,0 +1,387 @@
+﻿services:
+  timescaledb:
+    # Misma timescaledb que corria (fijada por digest en db/Dockerfile) + PostGIS 3.6.1.
+    # Antes: image: timescale/timescaledb:latest-pg15 (sigue en el cache local para volver atras).
+    image: explorador_climatico-timescaledb-postgis:pg15-3.6.1
+    build:
+      context: ./db
+      dockerfile: Dockerfile
+    container_name: clima_db
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-clima1234}
+      POSTGRES_DB: ${DB_NAME:-clima}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    networks:
+      - clima-network
+    restart: unless-stopped
+    mem_limit: 6g
+    mem_reservation: 2g
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d clima"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "127.0.0.1:6379:6379"
+    networks:
+      - clima-network
+    restart: unless-stopped
+    mem_limit: 256m
+
+  api:
+    image: explorador_climatico-api
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    volumes:
+      - ./api:/app
+      - ./shiny:/shiny:ro
+      - ./nginx/html:/site:ro
+      - ./ingest/logs:/ingest_logs:ro
+      - descargas_data:/tmp/descargas
+      - reportes_data:/data/reportes
+    environment:
+      - DB_HOST=${DB_HOST:-timescaledb}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-clima}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASS=${DB_PASS:-clima1234}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - SHINY_ROOT=/shiny
+      - DESCARGAS_DIR=/tmp/descargas
+      - REPORTES_DIR=/data/reportes
+      - GRANT_PRO_EMAILS=${GRANT_PRO_EMAILS:-jqvargas1000@gmail.com}
+      - GRANT_ADMIN_EMAILS=${GRANT_ADMIN_EMAILS:-jqvargas1000@gmail.com}
+      - INGEST_LOGS_DIR=/ingest_logs
+      - DB_POOL_MAX=${DB_POOL_MAX:-6}
+      - ANTICIPADA_PUSH=1
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - timescaledb
+      - redis
+    networks:
+      - clima-network
+    restart: unless-stopped
+    mem_limit: 1g
+    mem_reservation: 512m
+    logging:
+      driver: json-file
+      options:
+        mode: non-blocking
+        max-buffer-size: 4m
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Segunda réplica API (nginx RR). Sin puerto host — solo red interna.
+  api2:
+    image: explorador_climatico-api
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+      # Same image as api — no duplicate package install when both are up.
+    volumes:
+      - ./api:/app
+      - ./shiny:/shiny:ro
+      - ./nginx/html:/site:ro
+      - ./ingest/logs:/ingest_logs:ro
+      - descargas_data:/tmp/descargas
+      - reportes_data:/data/reportes
+    environment:
+      - DB_HOST=${DB_HOST:-timescaledb}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-clima}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASS=${DB_PASS:-clima1234}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - SHINY_ROOT=/shiny
+      - DESCARGAS_DIR=/tmp/descargas
+      - REPORTES_DIR=/data/reportes
+      - GRANT_PRO_EMAILS=${GRANT_PRO_EMAILS:-jqvargas1000@gmail.com}
+      - GRANT_ADMIN_EMAILS=${GRANT_ADMIN_EMAILS:-jqvargas1000@gmail.com}
+      - INGEST_LOGS_DIR=/ingest_logs
+      - DB_POOL_MAX=${DB_POOL_MAX:-6}
+      - ANTICIPADA_PUSH=1
+    env_file:
+      - .env
+    depends_on:
+      - timescaledb
+      - redis
+    networks:
+      - clima-network
+    restart: unless-stopped
+    mem_limit: 1g
+    mem_reservation: 512m
+    logging:
+      driver: json-file
+      options:
+        mode: non-blocking
+        max-buffer-size: 4m
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  shiny:
+    image: explorador_climatico-shiny
+    build:
+      context: ./shiny
+      dockerfile: Dockerfile
+    entrypoint: ["R"]
+    command: ["-e", "shiny::runApp('/srv/shiny-server', host='0.0.0.0', port=3838)"]
+    environment:
+      - API_URL=${API_URL:-http://api:8000}
+      - APP_PROFILE_DIR=/var/app_profiles
+      - SHINY_SESSION_IDLE_SEC=${SHINY_SESSION_IDLE_SEC:-1200}
+      - SHINY_KEEPALIVE_MS=${SHINY_KEEPALIVE_MS:-90000}
+    env_file:
+      - .env
+    volumes:
+      - ./shiny:/srv/shiny-server
+      # Same JSONL dir as API — Shiny writes session/api_get spans without HTTP beacons.
+      - ./api/logs/app_profiles:/var/app_profiles
+    ports:
+      - "3838:3838"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - clima-network
+    restart: unless-stopped
+    mem_limit: 1536m
+    mem_reservation: 768m
+
+  # Segundo worker Shiny (nginx sticky cookie rodaja_shiny=s2).
+  shiny2:
+    image: explorador_climatico-shiny
+    build:
+      context: ./shiny
+      dockerfile: Dockerfile
+    entrypoint: ["R"]
+    command: ["-e", "shiny::runApp('/srv/shiny-server', host='0.0.0.0', port=3838)"]
+    environment:
+      - API_URL=${API_URL:-http://api:8000}
+      - APP_PROFILE_DIR=/var/app_profiles
+      - SHINY_SESSION_IDLE_SEC=${SHINY_SESSION_IDLE_SEC:-1200}
+      - SHINY_KEEPALIVE_MS=${SHINY_KEEPALIVE_MS:-90000}
+    env_file:
+      - .env
+    volumes:
+      - ./shiny:/srv/shiny-server
+      - ./api/logs/app_profiles:/var/app_profiles
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - clima-network
+    restart: unless-stopped
+    mem_limit: 1536m
+    mem_reservation: 768m
+
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=${DB_HOST:-timescaledb}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-clima}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASS=${DB_PASS:-clima1234}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - DESCARGAS_DIR=/tmp/descargas
+      - REPORTES_DIR=/data/reportes
+      - SHINY_ROOT=/shiny
+      - API_ROOT=/api
+      - API_URL=${API_URL:-http://api:8000}
+      - ANTICIPADA_PUSH=1
+    volumes:
+      - ./worker:/app
+      - ./shiny:/shiny:ro
+      - ./api:/api:ro
+      - ./ingest/lib:/ingest_lib:ro
+      - ./ingest/logs:/ingest_logs
+      - descargas_data:/tmp/descargas
+      - reportes_data:/data/reportes
+    depends_on:
+      - redis
+      - timescaledb
+    networks:
+      - clima-network
+    restart: unless-stopped
+    mem_limit: 1g
+
+  ingest:
+    build:
+      context: ./ingest
+      dockerfile: Dockerfile
+    image: clima_ingest
+    env_file:
+      - .env
+    environment:
+      - TZ=America/Santiago
+      - DB_HOST=${DB_HOST:-timescaledb}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-clima}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASS=${DB_PASS:-clima1234}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - INGEST_TIER1_URL_DATES=1
+      - INGEST_PARALLEL_FUENTES=1
+      - INGEST_SLEEP_MIN_DGA=0.4
+      - INGEST_SLEEP_MIN_DMC=5
+      - INGEST_SLEEP_MAX_DMC=15
+      - INGEST_SLEEP_MIN_DMC_SLOW=1.8
+      - INGEST_DMC_BUDGET_SEC=21600
+      - INGEST_DMC_DEADLINE_LOCAL=09:00
+      - INGEST_DMC_DEADLINE_SLACK_SEC=2700
+      - INGEST_DMC_URLS_EST=2875
+      # DGA / SNIA — mismos knobs que probe (pool diferido + adapt)
+      - INGEST_DGA_TIMEOUT_SEC=210
+      - INGEST_DGA_CONCURRENCY=12
+      - INGEST_DGA_RAMP_SEC=45
+      - INGEST_DGA_MAX_RETRIES=3
+      - INGEST_DGA_ADAPT=1
+      - INGEST_DGA_TARGET_SEC=20
+      - INGEST_DGA_MIN_INFLIGHT=2
+      - INGEST_DMC_TIMEOUT_SEC=45
+      - INGEST_RETRY_DEAD=1
+    working_dir: /app
+    volumes:
+      - .:/app
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - clima-network
+    profiles:
+      - ingest
+
+  # One-shot DWD ICON -> Chile PNG. Disparar con --profile icon run --rm --no-deps.
+  icon:
+    build:
+      context: ./icon
+      dockerfile: Dockerfile
+    image: explorador_climatico-icon
+    profiles:
+      - icon
+    restart: "no"
+    mem_limit: 1g
+    environment:
+      - TZ=UTC
+      - PANORAMA_DATA=/data/panorama
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data/panorama:/data/panorama
+      - ./data/audit:/data/audit
+      - ./icon/run.py:/app/run.py:ro
+    working_dir: /app
+    networks:
+      - clima-network
+
+  # One-shot ICON 0.125 -> 0.05 topografico. Sidecar de Rodaja_Panorama_ICON.
+  downscale:
+    build:
+      context: ./downscale
+      dockerfile: Dockerfile
+    image: explorador_climatico-downscale
+    profiles:
+      - downscale
+    restart: "no"
+    mem_limit: 2g
+    environment:
+      - TZ=UTC
+      - PANORAMA_DATA=/data/panorama
+      - DOWNSCALE_DATA=/data/downscale
+      - GEO_DIR=/geo
+      - DB_HOST=${DB_HOST:-timescaledb}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-clima}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASS=${DB_PASS:-clima1234}
+    env_file:
+      - .env
+    volumes:
+      - ./downscale:/app
+      # rw: PNG paleta 0.05 en runs/{id}/t2m_005 y parche de current.json. GeoTIFF no se sirve.
+      - ./data/panorama:/data/panorama
+      - ./data/downscale:/data/downscale
+      - ./shiny/www/geo:/geo:ro
+    working_dir: /app
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    networks:
+      - clima-network
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      - API_KEY=${API_KEY:-}
+      - CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY:-}
+      - CLERK_ACCOUNT_URL=${CLERK_ACCOUNT_URL:-https://accounts.rodaja.cl}
+      - GTM_CONTAINER_ID=${GTM_CONTAINER_ID:-}
+      - GA4_MEASUREMENT_ID=${GA4_MEASUREMENT_ID:-}
+      - ADSENSE_PUBLISHER_ID=${ADSENSE_PUBLISHER_ID:-}
+      - SITE_CANONICAL_BASE=${SITE_CANONICAL_BASE:-https://app.rodaja.cl}
+      - CARTO_BASEMAP_KEY=${CARTO_BASEMAP_KEY:-}
+      - SHINY_AT_ROOT=${SHINY_AT_ROOT:-0}
+    volumes:
+      - ./nginx/html:/usr/share/nginx/html
+      - ./data/panorama:/data/panorama:ro
+      - ./canvases:/usr/share/nginx/html/planta/esquemas:ro
+      - ./shiny/www/geo:/usr/share/nginx/html/geo
+      - ./shiny/www/acerca-sections.html:/usr/share/nginx/html/acerca/sections.html:ro
+      - ./nginx/nginx.conf.template:/etc/nginx/nginx.conf.template:ro
+      - ./nginx/docker-entrypoint.sh:/docker-entrypoint.sh:ro
+      - ./nginx/snippets:/etc/nginx/snippets:ro
+    ports:
+      - "3000:80"
+    depends_on:
+      api:
+        condition: service_healthy
+      api2:
+        condition: service_healthy
+      shiny:
+        condition: service_started
+      shiny2:
+        condition: service_started
+    networks:
+      - clima-network
+    restart: unless-stopped
+    mem_limit: 256m
+
+networks:
+  clima-network:
+    driver: bridge
+
+volumes:
+  descargas_data:
+  reportes_data:

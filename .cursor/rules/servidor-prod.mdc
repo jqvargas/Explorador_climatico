@@ -1,0 +1,54 @@
+---
+description: Entorno de producción local en JAVIER_ZENBOOK — edición directa y Docker
+alwaysApply: true
+---
+
+# Servidor de producción (JAVIER_ZENBOOK)
+
+Este workspace **es el servidor de producción**, conectado por SSH al host **JAVIER_ZENBOOK**.  
+Ruta del proyecto: `C:\Users\rodaja\Explorador_climatico` (app en **https://app.rodaja.cl**).
+
+## Lo que el agente DEBE hacer
+
+- **Editar archivos directamente** en este folder. Los cambios son en vivo en el servidor.
+- **Ejecutar Docker Compose tú mismo** en la terminal (cmd/PowerShell), sin pedirle al usuario que lo haga.
+- Usar producción con `.\scripts\dc.ps1 …` (recomendado) o  
+  `docker compose -f docker-compose.yml -f docker-compose.prod.yml …`
+- **Error de credenciales Docker** (`logon session does not exist`): seguir la regla **docker-credentials-windows** — ejecutar `.\scripts\fix-docker-credentials.ps1 -Verify` y reintentar; no pedir al usuario.
+- **Evitar `--build`** salvo que cambió un `Dockerfile`. Para código en volumen (`api`, `worker`, `shiny`): `restart`.
+- Tras cambios en **nginx** (`nginx/nginx.conf.template`, snippets):  
+  `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --force-recreate nginx`
+- Tras cambios en **api**: `docker compose restart api`
+- Tras cambios en **worker**: `docker compose restart worker`
+- Tras cambios en **shiny** (solo JS/CSS estáticos montados en nginx): recarga del navegador suele bastar; si hace falta, `docker compose restart shiny nginx`
+- Verificar con `curl.exe` o logs: `docker compose logs api --tail 30`, `docker compose logs nginx --tail 30`
+
+## Lo que el agente NO debe hacer
+
+- **No pedir** “sube este archivo al servidor”, “copia al servidor”, “haz git pull”, ni “ejecuta docker compose” como instrucción al usuario.
+- **No asumir** un entorno local separado del de producción para este repo.
+- **No sugerir** despliegue manual por SCP/rsync salvo que el usuario lo pida explícitamente.
+
+## Git
+
+- El repo puede tener cambios sin commitear en el servidor. **No hace falta git pull** para aplicar fixes del agente.
+- Solo commitear o pushear cuando el usuario lo pida.
+
+## Stack relevante
+
+| Servicio | Rol |
+|----------|-----|
+| nginx | Proxy `/api/` → api:8000, estáticos `/descargar/`, Shiny en `/` |
+| api | Plumber en :8000 |
+| worker | Cola Redis de descargas |
+| shiny | Explorador |
+| timescaledb | PostgreSQL |
+
+## Nginx y restarts
+
+Si reinicias **api** o **worker** sin recrear nginx, puede aparecer **502** en `/api/*` (IP cacheada del contenedor).  
+La plantilla nginx usa resolver Docker (`127.0.0.11`); igual conviene recrear nginx tras cambios de infraestructura.
+
+## Terminal
+
+El usuario tiene una terminal en el proyecto (`JAVIER_ZENBOOK`). **Usa el tool Shell** para correr comandos ahí; no delegues al usuario.

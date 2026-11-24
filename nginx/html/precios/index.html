@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Precios — rodaja.cl</title>
+  <meta name="description" content="Planes Gratuito, Pro e Institucional para datos climáticos históricos de Chile.">
+  <link rel="canonical" href="https://app.rodaja.cl/precios/">
+  <meta property="og:title" content="Precios — rodaja.cl">
+  <meta property="og:description" content="Planes Gratuito, Pro e Institucional para datos climáticos históricos de Chile.">
+  <meta property="og:url" content="https://app.rodaja.cl/precios/">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png?v=20260702fav2">
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png?v=20260702fav2">
+  <link rel="icon" href="/favicon.ico?v=20260702fav2" sizes="any">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png?v=20260702fav2">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=20260702fav2">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="styles.css?v=20261123cuota">
+  <script src="/analytics/consent.js"></script>
+  <!--#include virtual="/_partials/gtm-head.html" -->
+  <script src="/rodaja-config.js?v=20260706cfg1"></script>
+  <script src="/analytics/analytics-events.js"></script>
+  <script src="/rodaja_auth_core.js?v=20260706auth1"></script>
+</head>
+<body>
+  <!--#include virtual="/_partials/gtm-body.html" -->
+  <!--#include virtual="/_partials/consent.html" -->
+  <header class="pr-header">
+    <a href="/" class="pr-logo"><span class="pr-logo-a">rodaja</span><span class="pr-logo-b">.cl</span></a>
+    <nav class="pr-nav">
+      <div id="pr-auth-bar"></div>
+      <a href="/explorador/">Explorador</a>
+      <a href="/sobre-rodaja/">Sobre Rodaja</a>
+      <a href="/acerca/">Acerca de</a>
+      <a href="/descargar/">Descargar</a>
+      <a href="/cuenta/">Cuenta</a>
+    </nav>
+  </header>
+
+  <main class="pr-main">
+    <div id="pr-banner" class="pr-banner" hidden></div>
+
+    <header class="pr-hero">
+      <h1>Planes simples</h1>
+      <p class="pr-hero-sub">Empieza gratis. Paga cuando necesites más.</p>
+    </header>
+
+    <section class="pr-grid" aria-label="Planes">
+      <article class="pr-card">
+        <div class="pr-card-body">
+          <h2 class="pr-tier">Gratuito</h2>
+          <p class="pr-audience">Para explorar y proyectos pequeños</p>
+          <div class="pr-price-block">
+            <span class="pr-price">$0</span>
+            <span class="pr-period">para siempre</span>
+          </div>
+          <ul class="pr-features">
+            <li><svg class="pr-check" viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0z"/></svg>Explorador, gráficos y descargas en planilla</li>
+            <li><svg class="pr-check" viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0z"/></svg>50 MB de descarga al mes</li>
+            <li><svg class="pr-check" viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0z"/></svg>1 alerta por correo (estación favorita)</li>
+            <li><svg class="pr-check" viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0z"/></svg>Hasta 200 estaciones por descarga</li>
+          </ul>
+        </div>
+        <footer class="pr-card-footer">
+          <button type="button" class="pr-btn pr-btn-secondary" id="pr-btn-gratuito">Comenzar</button>
+        </footer>
+      </article>
+
+      <article class="pr-card pr-card-featured">
+        <span class="pr-badge">Más popular</span>
+        <div class="pr-card-body">
+          <h2 class="pr-tier">Pro</h2>
+          <p class="pr-audience">Para consultores, agricultura y equipos que trabajan con datos</p>
+          <div class="pr-price-block pr-price-block-sale">
+            <p class="pr-price-was">Precio normal <s>$19.990</s> / mes</p>
+            <span class="pr-price-tag">Descuento</span>
+            <span class="pr-price">$9.990</span>
+            <span class="pr-period">/ mes</span>
+          </div>
+          <ul class="pr-features">
+            <li><svg class="pr-check" viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0z"/></svg>1 GB de descarga por mes</li>
+            <li><svg class="pr-check" viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0z"/></svg>Alertas sin límite y aviso por comuna o región</li>
+            <li><svg class="pr-check" viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0z"/></svg>Formato completo con control de calidad</li>
+            <li><svg class="pr-check" viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0z"/></svg>Licencia de uso comercial</li>
+          </ul>
+        </div>
+        <footer class="pr-card-footer">
+          <button type="button" class="pr-btn pr-btn-primary" id="pr-btn-pro">Suscribirse</button>
+          <p class="pr-footnote" id="pr-pro-note" hidden></p>
+        </footer>
+      </article>
+
+      <article class="pr-card">
+        <div class="pr-card-body">
+          <h2 class="pr-tier">Institucional</h2>
+          <p class="pr-audience">Para municipios, consultoras e instituciones</p>
+          <div class="pr-price-block">
+            <span class="pr-price pr-price-contact">Contactar</span>
+            <span class="pr-period">precio a conversar</span>
+          </div>
+          <ul class="pr-features">
+            <li><svg class="pr-check" viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0z"/></svg>3 GB de descarga por mes</li>
+            <li><svg class="pr-check" viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0z"/></svg>Estaciones ilimitadas por descarga</li>
+            <li><svg class="pr-check" viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0z"/></svg>Conexión para otros programas, con clave propia</li>
+            <li><svg class="pr-check" viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0z"/></svg>Factura para instituciones y orden de compra</li>
+          </ul>
+        </div>
+        <footer class="pr-card-footer">
+          <a class="pr-btn pr-btn-secondary" id="pr-btn-institucional" href="/formulario/?asunto=Plan%20Institucional">Contactar a ventas</a>
+        </footer>
+      </article>
+    </section>
+
+    <p class="pr-quota-note">En todos los planes, la cuota de descarga se renueva cada mes, en la misma fecha en que te registraste.</p>
+
+    <section class="pr-compare-section">
+      <button type="button" class="pr-compare-toggle" id="pr-compare-toggle" aria-expanded="false" aria-controls="pr-compare-panel">
+        <span id="pr-compare-label">Ver comparación completa</span>
+        <svg class="pr-chevron" viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M5.3 7.3a1 1 0 0 1 1.4 0L10 10.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 0 1 0-1.4z"/></svg>
+      </button>
+      <div id="pr-compare-panel" class="pr-compare-panel" hidden>
+        <div class="pr-table-wrap">
+          <table class="pr-table">
+            <thead>
+              <tr>
+                <th>Característica</th>
+                <th>Gratuito</th>
+                <th>Pro</th>
+                <th>Institucional</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Límite de descarga</td><td>50 MB al mes</td><td>1 GB al mes</td><td>3 GB al mes</td></tr>
+              <tr><td>Renovación de la cuota</td><td>Cada mes, en la fecha de registro</td><td>Cada mes, en la fecha de registro</td><td>Cada mes, en la fecha de registro</td></tr>
+              <tr><td>Estaciones por descarga</td><td>200</td><td>200</td><td>Ilimitado</td></tr>
+              <tr><td>Explorador y gráficos</td><td>Sí</td><td>Sí</td><td>Sí</td></tr>
+              <tr><td>Datos revisados</td><td>Sí</td><td>Sí</td><td>Sí</td></tr>
+              <tr><td>Por año, mes o día</td><td>Sí</td><td>Sí</td><td>Sí</td></tr>
+              <tr><td>Alertas por correo</td><td>1</td><td>Sin límite</td><td>Sin límite</td></tr>
+              <tr><td>Datos por alerta</td><td>1</td><td>Sin límite</td><td>Sin límite</td></tr>
+              <tr><td>Dónde avisar</td><td>Favorita</td><td>Comuna, región, cuenca…</td><td>Comuna, región, cuenca…</td></tr>
+              <tr><td>Licencia uso comercial</td><td>—</td><td>Sí</td><td>Sí</td></tr>
+              <tr><td>Conexión para otros programas</td><td>—</td><td>—</td><td>Sí</td></tr>
+              <tr><td>Ayuda</td><td>—</td><td>Correo</td><td>Persona de contacto</td></tr>
+              <tr><td>Facturación institucional / OC</td><td>—</td><td>—</td><td>Sí</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="pr-faq">
+      <h2>Preguntas frecuentes</h2>
+      <details class="pr-faq-item">
+        <summary>¿Puedo cambiar de plan después?</summary>
+        <p>Sí. Puedes pasar a Pro cuando quieras. Para el plan de instituciones o cambiar el límite de descarga, escríbenos.</p>
+      </details>
+      <details class="pr-faq-item">
+        <summary>¿Qué medios de pago aceptan?</summary>
+        <p>Pro se paga con tarjeta de crédito o débito en pesos chilenos, por Flow (Webpay y otros medios). El plan de instituciones se factura según tu proceso (transferencia, orden de compra, etc.).</p>
+      </details>
+      <details class="pr-faq-item">
+        <summary>¿Cómo funciona la facturación para municipios o gobierno?</summary>
+        <p>El plan de instituciones no se paga solo en la página. Escríbenos con el RUT de la institución y te enviamos la propuesta y los papeles para comprar.</p>
+      </details>
+      <details class="pr-faq-item">
+        <summary>¿Puedo cancelar cuando quiera?</summary>
+        <p>Sí. El plan Pro se renueva cada mes. Puedes cancelarlo desde tu cuenta y sigues con acceso hasta que termine el mes ya pagado.</p>
+      </details>
+      <details class="pr-faq-item">
+      <details class="pr-faq-item">
+        <summary>¿Cuándo se renueva la cuota de descarga?</summary>
+        <p>La cuota se renueva cada mes, en la misma fecha en que te registraste. El plan gratuito incluye 50 MB al mes; el plan Pro, 1 GB al mes; y el plan institucional, 3 GB al mes.</p>
+      </details>
+      <details class="pr-faq-item">
+        <summary>¿Los datos son los mismos en todos los planes?</summary>
+        <p>Sí: los mismos datos de la Dirección de Aguas y la Dirección Meteorológica. Cambia el límite de descarga, las alertas, los lugares y, en el plan de instituciones, la conexión para otros programas.</p>
+      </details>
+    </section>
+  </main>
+
+  <footer class="pr-footer">
+    <p>rodaja.cl — Datos climáticos históricos para Chile · <a href="/sobre-rodaja/">Sobre Rodaja</a> · <a href="/acerca/">Acerca de</a> · <a href="https://www.linkedin.com/company/rodaja-cl/" rel="noopener" target="_blank">Rodaja en LinkedIn</a></p>
+  </footer>
+
+  <script src="app.js?v=20260922twa4"></script>
+  <link rel="stylesheet" href="/ec_soporte.css?v=20261009ayuda">
+  <script src="/ec_soporte.js?v=20261008llm"></script>
+</body>
+</html>

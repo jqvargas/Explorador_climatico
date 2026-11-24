@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suscripción confirmada — rodaja.cl</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png?v=20260702fav2">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="styles.css?v=20260830fondo1">
+  <script src="/analytics/consent.js"></script>
+  <!--#include virtual="/_partials/gtm-head.html" -->
+  <script src="/rodaja-config.js"></script>
+  <script src="/analytics/analytics-events.js"></script>
+  <script src="/rodaja_auth_core.js"></script>
+</head>
+<body>
+  <!--#include virtual="/_partials/gtm-body.html" -->
+  <header class="pr-header">
+    <a href="/mi-reporte/" class="pr-logo"><span class="pr-logo-a">rodaja</span><span class="pr-logo-b">.cl</span></a>
+    <nav class="pr-nav">
+      <a href="/explorador/">Explorador</a>
+      <a href="/cuenta/">Cuenta</a>
+    </nav>
+  </header>
+
+  <main class="pr-main pr-main-narrow">
+    <section class="pr-status-card">
+      <div class="pr-status-icon pr-status-icon-ok" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>
+      </div>
+      <h1>¡Gracias por suscribirte!</h1>
+      <p id="pr-exito-msg">Tu pago fue procesado por <strong>Flow</strong>. Tu plan <strong>Pro</strong> se activará en unos momentos cuando confirmemos el pago.</p>
+      <p id="pr-exito-pending" class="pr-muted" hidden>Confirmando tu plan Pro…</p>
+      <p class="pr-muted">Si después de 10 minutos no ves el plan Pro en tu cuenta, escríbenos a <a href="mailto:admin@rodaja.cl">admin@rodaja.cl</a>.</p>
+      <div class="pr-status-actions">
+        <a class="pr-btn pr-btn-primary" href="/mi-reporte/">Ir a mi reporte</a>
+        <a class="pr-btn pr-btn-secondary" href="/explorador/">Ir al explorador</a>
+        <a class="pr-btn pr-btn-secondary" href="/cuenta/">Ver mi cuenta</a>
+      </div>
+    </section>
+  </main>
+  <script>
+  (function () {
+    "use strict";
+    var params = new URLSearchParams(location.search);
+    var txId = params.get("token") || params.get("session_id") || undefined;
+    if (typeof rodajaTrack === "function") {
+      rodajaTrack("purchase", { plan: "pro", currency: "CLP", value: 9990, transaction_id: txId });
+    }
+
+    function setPending(on) {
+      var el = document.getElementById("pr-exito-pending");
+      if (el) el.hidden = !on;
+    }
+
+    function pollTier(attempt) {
+      if (typeof rodajaApiFetch !== "function") return;
+      setPending(true);
+      rodajaApiFetch("/me").then(function (r) {
+        return r.ok ? r.json() : null;
+      }).then(function (me) {
+        if (me && (me.tier === "pro" || me.tipo_usuario === "pro")) {
+          setPending(false);
+          var msg = document.getElementById("pr-exito-msg");
+          if (msg) msg.textContent = "Tu plan Pro ya está activo. ¡Gracias por suscribirte!";
+          return;
+        }
+        if (attempt < 20) {
+          setTimeout(function () { pollTier(attempt + 1); }, 3000);
+        } else {
+          setPending(false);
+        }
+      }).catch(function () {
+        if (attempt < 20) setTimeout(function () { pollTier(attempt + 1); }, 3000);
+      });
+    }
+
+    if (typeof rodajaInitAuth === "function") {
+      rodajaInitAuth().then(function () {
+        if (typeof rodajaIsSignedIn === "function" && rodajaIsSignedIn()) pollTier(0);
+      });
+    }
+  })();
+  </script>
+  <link rel="stylesheet" href="/ec_soporte.css?v=20261009ayuda">
+  <script src="/ec_soporte.js?v=20261008llm"></script>
+</body>
+</html>

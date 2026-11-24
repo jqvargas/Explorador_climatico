@@ -1,0 +1,16 @@
+2 alertas top 10 — rodaja.cl (01 Jul 2026)
+
+RESUMEN DE ALERTAS TOP 10 — rodaja.cl (01 Jul 2026)
+
+Tienes 2 alerta(s) nueva(s) hoy:
+
+🥇 #1 Precipitacion diaria — Quinta Normal, Santiago
+   15 mar 2024: 89,2 mm (maximos)
+   https://app.rodaja.cl/mi-reporte/?e=330020&v=3
+
+🏅 #5 Temperatura minima — Chillan
+   8 jul 2024: -8,6 C (minimos)
+   https://app.rodaja.cl/mi-reporte/?e=360010&v=6
+
+Panel de alertas: https://app.rodaja.cl/alertas/
+

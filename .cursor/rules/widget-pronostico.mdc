@@ -1,0 +1,25 @@
+---
+description: Cola del widget de pronóstico en la TWA. Leer el plan, reclamar una etapa, no tocar DAL ni mandar coordenadas.
+globs: docs/producto/PLAN_WIDGET_PRONOSTICO.md,docs/producto/widget_pronostico_PROMPT_FIJO.md,docs/producto/widget_pronostico_cola.json,docs/producto/widget_pronostico/**,mobile/twa/**,api/endpoints/widget.R,api/utils/widget_pronostico.R
+alwaysApply: false
+---
+
+# Widget pronóstico (agentes)
+
+Cola: `docs/producto/widget_pronostico_cola.json`. Master: `docs/producto/PLAN_WIDGET_PRONOSTICO.md`. Prompt: `docs/producto/widget_pronostico_PROMPT_FIJO.md`.
+
+Un agente = una etapa. Plan antes de codear. Cerrar con handoff.
+
+## Producto
+
+El widget muestra el pronóstico Open-Meteo de **hoy** de una estación. La temperatura “ahora” es la hora de pronóstico más cercana, no la observación. La estación se elige en el teléfono. Al servidor solo viaja `station_id`.
+
+## Prohibido
+
+- `assetlinks.json`, splash, `start_url`, `bubblewrap update` / `bubblewrap init`
+- `ACCESS_BACKGROUND_LOCATION` y `ACCESS_FINE_LOCATION`
+- Llamar `/estaciones/cercanas` o cualquier URL con lat/lon desde el widget
+- Rankings, alertas de suscripción o viento en el JSON del widget
+- Bajar `minSdk` de 24 (Play, protección automática). Pin solo con guarda API 26
+- Publicar AAB, abrir Play Console, firmar con el keystore
+- Velo / fake WebSocket / HTTP/3 / Play Billing

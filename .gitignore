@@ -1,0 +1,60 @@
+﻿# Bases de datos y datos locales
+pgdata/
+*.db
+*.sqlite
+*.sqlite3
+
+# Variables de entorno (pueden contener secretos)
+.env
+.env.local
+.env.*.local
+ingest/config/ingest.env
+
+# Ingesta: staging y logs locales
+ingest/staging/*
+!ingest/staging/.gitkeep
+ingest/logs/*
+!ingest/logs/.gitkeep
+ingest/logs/meteovision/
+
+# Chat de soporte (preguntas de usuarios)
+api/logs/soporte_chat.jsonl
+
+# App profiler session dumps (keep enabled flag + gitkeep)
+api/logs/app_profiles/*
+!api/logs/app_profiles/.gitkeep
+!api/logs/app_profiles/enabled.json
+
+# QA tool outputs (keep .gitkeep)
+qa/results/*
+!qa/results/.gitkeep
+
+# Logs y archivos temporales
+*.log
+*.tmp
+*.temp
+desktop.ini
+
+# R
+.Rhistory
+.RData
+.Rproj.user
+
+# Cursor: keep project rules visible to the editor indexer
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
+
+# TWA / Android signing (nunca en git)
+*.jks
+*.keystore
+mobile/twa/android/
+
+# Geo build scratch (chilemapas downloads)
+scripts/geo/_tmp/
+
+# Panorama ICON (GRIB scratch, PNG, current.json)
+data/panorama/
+
+# Downscale ICON 0.05 (DEM agregado, deltas, GeoTIFF privados)
+data/downscale/

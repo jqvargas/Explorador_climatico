@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: system-ui, sans-serif; width: 280px; margin: 0; padding: 12px; }
+    h1 { font-size: 14px; margin: 0 0 10px; color: #394553; }
+    .primary { font-weight: 600; margin-bottom: 8px; }
+    .muted { color: #8C9091; font-size: 12px; }
+    button { width: 100%; margin-top: 8px; padding: 8px; border-radius: 6px; cursor: pointer; }
+    .btn-main { background: #DF9531; color: #fff; border: none; }
+    .btn-sec { background: #fff; border: 1px solid #D4DAE0; color: #394553; }
+  </style>
+</head>
+<body>
+  <h1>rodaja.cl favoritos</h1>
+  <div id="status" class="muted">Cargando\u2026</div>
+  <div id="primary" class="primary" hidden></div>
+  <button id="open" class="btn-main" hidden>Abrir mi estaci\u00f3n</button>
+  <button id="fix-tab" class="btn-sec">Fijar pesta\u00f1a actual</button>
+  <script src="popup.js"></script>
+</body>
+</html>

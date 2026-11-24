@@ -1,0 +1,224 @@
+/* Tour guiado — theming alineado con widgets rodaja (reporte_widgets.css) */
+
+/* ponytail: anular zoom 0.67 de desktop solo durante el tour (driver.js alinea mal) */
+@media (min-width: 768px) {
+  html.ec-onboarding-active {
+    zoom: 1 !important;
+  }
+  html.ec-onboarding-active #mapa_mount {
+    zoom: 1 !important;
+  }
+}
+
+/* ponytail: drawer visible para medición driver.js (paso filtros) sin esperar animación */
+html.ec-onboarding-force-drawer #ec_drawer_filtros {
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  pointer-events: auto !important;
+}
+html.ec-onboarding-force-drawer #ec_drawer_overlay {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+html.ec-onboarding-active #driver-popover-item.ec-popover-fixed {
+  z-index: 10000050 !important;
+}
+
+.driver-overlay {
+  background: rgba(46, 56, 68, 0.55) !important;
+}
+
+/* ponytail: driver.min.css fija max-width:300px y font:19px/14px con div# — hay que ganar especificidad */
+div#driver-popover-item,
+#driver-popover-item,
+.driver-popover.ec-cicerone-pop,
+#ec_onboarding.driver-popover {
+  --ec-rw-brand: #DF9531;
+  --ec-rw-dark: #394553;
+  --ec-rw-text-muted: #8A95A0;
+  --ec-rw-border: rgba(0, 0, 0, 0.06);
+  --ec-rw-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.08);
+  --ec-rw-radius: 16px;
+  font-family: "DM Sans", "Inter", system-ui, sans-serif !important;
+  background: #fff;
+  color: var(--ec-rw-dark);
+  border-radius: var(--ec-rw-radius);
+  box-shadow: var(--ec-rw-shadow);
+  border: 1px solid var(--ec-rw-border);
+  min-width: min(280px, 92vw) !important;
+  max-width: min(380px, 94vw) !important;
+  width: auto !important;
+  box-sizing: border-box !important;
+  padding: 18px 20px 16px !important;
+  z-index: 10000050 !important;
+}
+
+div#driver-popover-item .driver-popover-title,
+#driver-popover-item .driver-popover-title,
+.driver-popover.ec-cicerone-pop .driver-popover-title,
+#ec_onboarding .driver-popover-title {
+  font: 600 22px/1.3 "DM Sans", "Inter", system-ui, sans-serif !important;
+  letter-spacing: 0.01em !important;
+  text-transform: none !important;
+  color: var(--ec-rw-dark) !important;
+  margin-bottom: 10px !important;
+  padding-bottom: 10px !important;
+  border-bottom: 1px solid var(--ec-rw-border) !important;
+  text-shadow: none !important;
+}
+
+div#driver-popover-item .driver-popover-description,
+#driver-popover-item .driver-popover-description,
+.driver-popover.ec-cicerone-pop .driver-popover-description,
+#ec_onboarding .driver-popover-description {
+  font: 400 15px/1.5 "DM Sans", "Inter", system-ui, sans-serif !important;
+  color: var(--ec-rw-dark) !important;
+  text-shadow: none !important;
+}
+
+div#driver-popover-item .ec-onboarding-progress,
+#driver-popover-item .ec-onboarding-progress {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  color: var(--ec-rw-brand) !important;
+  margin-bottom: 8px !important;
+}
+
+/* ponytail: anular float de driver.js v0.9 — footer en una sola fila alineada */
+div#driver-popover-item .driver-popover-footer,
+#driver-popover-item .driver-popover-footer,
+.driver-popover.ec-cicerone-pop .driver-popover-footer,
+#ec_onboarding .driver-popover-footer {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: nowrap !important;
+  gap: 8px !important;
+  margin-top: 14px !important;
+  clear: both !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+div#driver-popover-item .driver-popover-footer .driver-close-btn,
+div#driver-popover-item .driver-popover-footer .driver-btn-group,
+div#driver-popover-item .driver-popover-footer .driver-close-only-btn,
+#driver-popover-item .driver-popover-footer .driver-close-btn,
+#driver-popover-item .driver-popover-footer .driver-btn-group,
+.driver-popover.ec-cicerone-pop .driver-popover-footer .driver-close-btn,
+.driver-popover.ec-cicerone-pop .driver-popover-footer .driver-btn-group {
+  float: none !important;
+}
+
+div#driver-popover-item .driver-popover-footer .driver-btn-group,
+#driver-popover-item .driver-popover-footer .driver-btn-group,
+.driver-popover.ec-cicerone-pop .driver-popover-footer .driver-btn-group {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  margin-left: auto !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+div#driver-popover-item .driver-popover-footer button,
+#driver-popover-item .driver-popover-footer button,
+.driver-popover.ec-cicerone-pop .driver-popover-footer button,
+#ec_onboarding .driver-popover-footer button {
+  font-family: "DM Sans", "Inter", system-ui, sans-serif !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  padding: 8px 12px !important;
+  text-shadow: none !important;
+  line-height: 1.2 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+  box-sizing: border-box !important;
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  white-space: nowrap !important;
+}
+
+div#driver-popover-item .driver-popover-footer .driver-next-btn,
+div#driver-popover-item .driver-popover-footer .driver-done-btn,
+#driver-popover-item .driver-popover-footer .driver-next-btn,
+#driver-popover-item .driver-popover-footer .driver-done-btn,
+.driver-popover.ec-cicerone-pop .driver-popover-footer .driver-next-btn,
+.driver-popover.ec-cicerone-pop .driver-popover-footer .driver-done-btn,
+#ec_onboarding .driver-popover-footer .driver-next-btn,
+#ec_onboarding .driver-popover-footer .driver-done-btn {
+  background-color: #DF9531 !important;
+  background: #DF9531 !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+div#driver-popover-item .driver-popover-footer .driver-next-btn:hover,
+div#driver-popover-item .driver-popover-footer .driver-done-btn:hover,
+.driver-popover.ec-cicerone-pop .driver-popover-footer .driver-next-btn:hover,
+.driver-popover.ec-cicerone-pop .driver-popover-footer .driver-done-btn:hover {
+  background-color: #c78528 !important;
+  background: #c78528 !important;
+  color: #fff !important;
+}
+
+div#driver-popover-item .driver-popover-footer .driver-prev-btn,
+#driver-popover-item .driver-popover-footer .driver-prev-btn,
+.driver-popover.ec-cicerone-pop .driver-popover-footer .driver-prev-btn {
+  background: #fff !important;
+  color: var(--ec-rw-dark) !important;
+  border: 1px solid rgba(57, 69, 83, 0.22) !important;
+}
+
+div#driver-popover-item .driver-popover-footer .driver-close-btn,
+#driver-popover-item .driver-popover-footer .driver-close-btn,
+.driver-popover.ec-cicerone-pop .driver-popover-footer .driver-close-btn {
+  background: #f1f3f5 !important;
+  color: var(--ec-rw-text-muted) !important;
+  border: 1px solid rgba(57, 69, 83, 0.12) !important;
+  font-size: 14px !important;
+  flex-shrink: 0 !important;
+}
+
+#driver-page-overlay {
+  z-index: 10000040 !important;
+}
+
+#ec_filter_principal.ec-filter-principal {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+@media (max-width: 767px) {
+  div#driver-popover-item,
+  #driver-popover-item {
+    min-width: min(260px, 92vw) !important;
+    max-width: 94vw !important;
+    padding: 16px 16px 14px !important;
+  }
+  div#driver-popover-item .driver-popover-title,
+  #driver-popover-item .driver-popover-title {
+    font: 600 20px/1.3 "DM Sans", "Inter", system-ui, sans-serif !important;
+  }
+  div#driver-popover-item .driver-popover-description,
+  #driver-popover-item .driver-popover-description {
+    font: 400 14px/1.5 "DM Sans", "Inter", system-ui, sans-serif !important;
+  }
+  div#driver-popover-item .driver-popover-footer button,
+  #driver-popover-item .driver-popover-footer button {
+    font-size: 13px !important;
+    padding: 7px 11px !important;
+  }
+}

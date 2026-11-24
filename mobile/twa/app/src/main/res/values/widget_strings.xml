@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_pronostico_name">Pronóstico de hoy</string>
+    <string name="widget_pronostico_desc">Pronóstico de hoy de una estación de la red.</string>
+    <string name="widget_loading">Cargando pronóstico</string>
+    <string name="widget_onboarding_title">Pronóstico en tu pantalla de inicio</string>
+    <string name="widget_onboarding_body">Ver el pronóstico en tu pantalla de inicio. Con tu ubicación aproximada elegimos la estación más cercana. Se usa en este momento, no con la app cerrada, y no se envía al servidor.</string>
+    <string name="widget_onboarding_continue">Continuar</string>
+    <string name="widget_onboarding_open">Abrir rodaja</string>
+    <string name="widget_onboarding_searching">Buscando la estación más cercana…</string>
+    <string name="widget_use_nearest">Usar la más cercana</string>
+    <string name="widget_search_hint">Buscar estación o comuna</string>
+    <string name="widget_offer_pin">Agregar el pronóstico a tu pantalla de inicio.</string>
+    <string name="widget_offer_saved">Estación fijada.</string>
+    <string name="widget_offer_add">Agregar</string>
+    <string name="widget_offer_close">Cerrar</string>
+    <string name="widget_offer_manual">En este teléfono se agrega a mano: mantén pulsado el inicio, Widgets, rodaja, Pronóstico de hoy.</string>
+    <string name="widget_offer_already">El pronóstico ya está en tu pantalla de inicio.</string>
+</resources>

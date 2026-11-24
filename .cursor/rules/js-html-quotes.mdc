@@ -1,0 +1,39 @@
+﻿---
+description: Evitar SyntaxError por comillas mezcladas en HTML concatenado (JS estático).
+globs: shiny/www/**/*.js,nginx/html/**/*.js
+alwaysApply: false
+---
+
+# Comillas en HTML concatenado (JS)
+
+En `innerHTML` y plantillas HTML armadas con `+`, un **delimitador de cierre incorrecto invalida todo el archivo**: el script no parsea, no exporta funciones (`rodajaAlertasBoot`, etc.) y la SPA muestra pantalla en blanco o mensaje genérico de carga.
+
+## Regla
+
+Si un literal empieza con `'`, debe cerrar con `' +` (no con `" +`). Si empieza con `"`, cierra con `" +`.
+
+Atributos HTML con `"` **dentro** de un literal `'...'` están bien. El error es el delimitador **final** del literal.
+
+```javascript
+// ❌ MAL — comilla de cierre incorrecta; SyntaxError en todo app.js
+'<p class="al-desc">Texto.</p>" +
+'<label><input type="radio" name="x"' + (on ? " checked" : "") + "> Etiqueta</label>" +
+'<select id="al-new-value" hidden></select>" +
+
+// ✅ BIEN
+'<p class="al-desc">Texto.</p>' +
+'<label><input type="radio" name="x"' + (on ? " checked" : "") + '> Etiqueta</label>' +
+'<select id="al-new-value" hidden></select>' +
+```
+
+## Al editar bloques `innerHTML` / `innerHTML =`
+
+1. Revisar cada línea que termina en `" +` o `' +`: el primer carácter de la cadena debe coincidir con el delimitador antes del `+`.
+2. Tras cambios sustanciales, validar sintaxis: `node --check nginx/html/alertas/app.js` (o el archivo tocado). Un solo error de comillas rompe la ejecución completa.
+3. Reutilizar el patrón del repo: `esc()` + concatenación explícita, como en `nginx/html/descargar/app.js` y `nginx/html/alertas/app.js`.
+
+## Síntoma en producción
+
+- Assets 200 OK en nginx, pero cero llamadas API del panel.
+- `typeof rodajaAlertasBoot !== "function"` en el boot inline.
+- Ping/dbg al inicio del `.js` nunca aparece (fallo de parseo, no de runtime).
